@@ -2,17 +2,19 @@
   "config": {
     "argv": [
       "/usr/bin/node",
-      "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/node_modules/.bin/playwright",
+      "/tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/node_modules/.bin/playwright",
       "test",
       "--reporter",
       "json,line,/app/pw-reporter.cjs",
       "--trace",
       "on",
       "--grep",
-      "ATE\\-SM\\-08:\\ shows\\ on\\ a\\ non\\-attendance\\ page\\ when\\ eligible\\ and\\ not\\ checked\\ in;\\ dismisses\\ via\\ close\\ and\\ via\\ backdrop\\ click\\-through|the\\ popup\\ never\\ renders\\ on\\ /attendance\\ or\\ /login,\\ regardless\\ of\\ check\\-in\\ state|ATE\\-PM\\-05:\\ a\\ persona\\ lacking\\ shifts\\.manage\\ sees\\ no\\ \"New\\ Shift\"\\ button|ATE\\-PM\\-06:\\ the\\ Work\\ Modes\\ list\\ itself\\ is\\ visible\\ to\\ any\\ authenticated\\ user\\ \\(GET\\ /\\ is\\ permission\\-free\\)|ATE\\-PM\\-10:\\ an\\ employee\\ retains\\ attendance\\.checkin\\ capability\\ regardless\\ of\\ the\\ \"Attendance\\ Required\\ For\"\\ opt\\-out\\ setting"
+      "CD\\-VD\\-01:\\ missing\\ title\\ is\\ rejected\\ with\\ a\\ 400\\ required\\-field\\ error|title\\ at\\ \\$\\{label\\}|CD\\-VD\\-03:\\ missing\\ or\\ invalid\\ category\\ is\\ rejected\\ with\\ a\\ 400\\ enum/required\\ error|CD\\-VD\\-04:\\ roleIds/departmentIds/locationIds\\ submitted\\ as\\ non\\-array\\ values\\ are\\ rejected|CD\\-VD\\-05\\ \\(confirmed\\ gap\\):\\ expiry_date\\ as\\ a\\ non\\-date,\\ non\\-empty\\ string\\ passes\\ validation\\ —\\ mirrors\\ CD\\-NG\\-13\\ for\\ effective_date|CD\\-VD\\-06:\\ an\\ extremely\\ long\\ description\\ is\\ accepted\\ \\(NVARCHAR\\(MAX\\),\\ no\\ max\\-length\\ validation\\ anywhere\\)|CD\\-NG\\-01:\\ uploading\\ a\\ file\\ with\\ an\\ unsupported\\ extension\\ is\\ rejected\\ with\\ a\\ 400\\ naming\\ the\\ extension|CD\\-BD\\-01\\ \\(confirmed\\ gap\\):\\ a\\ file\\ exactly\\ at\\ the\\ advertised\\ 20MB\\ limit\\ is\\ REJECTED\\ —\\ the\\ effective\\ limit\\ is\\ one\\ byte\\ short\\ of\\ MAX_FILE_SIZE_BYTES|EM\\-FN\\-06:\\ users\\.view\\.team\\ \\(manager\\)\\ sees\\ only\\ their\\ reporting\\ subtree|LV\\-BD\\-04:\\ a\\ leave\\ spanning\\ Dec\\ 31\\ into\\ Jan\\ 1\\ is\\ accepted",
+      "--workers",
+      "4"
     ],
-    "configFile": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/playwright.config.ts",
-    "rootDir": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/tests",
+    "configFile": "/tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/playwright.config.ts",
+    "rootDir": "/tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/tests",
     "failOnFlakyTests": false,
     "forbidOnly": false,
     "fullyParallel": false,
@@ -23,20 +25,20 @@
     "grepInvert": null,
     "maxFailures": 0,
     "metadata": {
-      "actualWorkers": 1
+      "actualWorkers": 3
     },
     "preserveOutput": "always",
     "projects": [
       {
-        "outputDir": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/test-results",
+        "outputDir": "/tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/test-results",
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
-          "actualWorkers": 1
+          "actualWorkers": 3
         },
         "id": "",
         "name": "",
-        "testDir": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/tests",
+        "testDir": "/tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/tests",
         "testIgnore": [],
         "testMatch": [
           "**/*.@(spec|test).?(c|m)[jt]s?(x)"
@@ -65,33 +67,42 @@
     "updateSnapshots": "missing",
     "updateSourceMethod": "patch",
     "version": "1.61.1",
-    "workers": 1,
+    "workers": 4,
     "webServer": null
   },
   "suites": [
     {
-      "title": "attendance-appshell-popup.spec.ts",
-      "file": "attendance-appshell-popup.spec.ts",
+      "title": "company-documents-form-validation.spec.ts",
+      "file": "company-documents-form-validation.spec.ts",
       "column": 0,
       "line": 0,
       "specs": [],
       "suites": [
         {
-          "title": "AppShell — missed check-in popup",
-          "file": "attendance-appshell-popup.spec.ts",
-          "line": 6,
+          "title": "Company Documents — Form & Upload Validation",
+          "file": "company-documents-form-validation.spec.ts",
+          "line": 21,
           "column": 6,
           "specs": [
             {
-              "title": "ATE-SM-08: shows on a non-attendance page when eligible and not checked in; dismisses via close and via backdrop click-through",
-              "ok": false,
+              "title": "CD-VD-01: missing title is rejected with a 400 required-field error",
+              "ok": true,
               "tags": [
-                "smoke"
+                "regression"
               ],
               "tests": [
                 {
-                  "timeout": 30000,
-                  "annotations": [],
+                  "timeout": 90000,
+                  "annotations": [
+                    {
+                      "type": "slow",
+                      "location": {
+                        "file": "/tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/tests/company-documents-form-validation.spec.ts",
+                        "line": 22,
+                        "column": 32
+                      }
+                    }
+                  ],
                   "expectedStatus": "passed",
                   "projectId": "",
                   "projectName": "",
@@ -99,67 +110,464 @@
                     {
                       "workerIndex": 0,
                       "parallelIndex": 0,
-                      "status": "failed",
-                      "duration": 10251,
-                      "error": {
-                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByText(/Tap here to start your day/)\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByText(/Tap here to start your day/)\u001b[22m\n",
-                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByText(/Tap here to start your day/)\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByText(/Tap here to start your day/)\u001b[22m\n\n    at AppShellPopup.expectVisible (/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/pages/components/AppShellPopup.ts:26:33)\n    at /tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/tests/attendance-appshell-popup.spec.ts:17:17",
-                        "location": {
-                          "file": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/pages/components/AppShellPopup.ts",
-                          "column": 33,
-                          "line": 26
-                        },
-                        "snippet": "   at ../pages/components/AppShellPopup.ts:26\n\n  24 |\n  25 |   async expectVisible() {\n> 26 |     await expect(this.bodyText).toBeVisible();\n     |                                 ^\n  27 |   }\n  28 |\n  29 |   async expectHidden() {"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/pages/components/AppShellPopup.ts",
-                            "column": 33,
-                            "line": 26
-                          },
-                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByText(/Tap here to start your day/)\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByText(/Tap here to start your day/)\u001b[22m\n\n\n   at ../pages/components/AppShellPopup.ts:26\n\n  24 |\n  25 |   async expectVisible() {\n> 26 |     await expect(this.bodyText).toBeVisible();\n     |                                 ^\n  27 |   }\n  28 |\n  29 |   async expectHidden() {\n    at AppShellPopup.expectVisible (/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/pages/components/AppShellPopup.ts:26:33)\n    at /tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/tests/attendance-appshell-popup.spec.ts:17:17"
-                        }
-                      ],
+                      "status": "passed",
+                      "duration": 1445,
+                      "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-24T14:04:58.080Z",
-                      "annotations": [],
+                      "startTime": "2026-08-24T16:09:17.011Z",
+                      "annotations": [
+                        {
+                          "type": "slow",
+                          "location": {
+                            "file": "/tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/tests/company-documents-form-validation.spec.ts",
+                            "line": 22,
+                            "column": 32
+                          }
+                        }
+                      ],
                       "attachments": [
                         {
                           "name": "screenshot",
                           "contentType": "image/png",
-                          "path": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/test-results/attendance-appshell-popup--f0851--via-backdrop-click-through/test-failed-1.png"
-                        },
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/test-results/attendance-appshell-popup--f0851--via-backdrop-click-through/error-context.md"
+                          "path": "/tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/test-results/company-documents-form-val-cc13f--a-400-required-field-error/test-finished-1.png"
                         },
                         {
                           "name": "trace",
                           "contentType": "application/zip",
-                          "path": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/test-results/attendance-appshell-popup--f0851--via-backdrop-click-through/trace.zip"
+                          "path": "/tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/test-results/company-documents-form-val-cc13f--a-400-required-field-error/trace.zip"
                         }
-                      ],
-                      "errorLocation": {
-                        "file": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/pages/components/AppShellPopup.ts",
-                        "column": 33,
-                        "line": 26
-                      }
+                      ]
                     }
                   ],
-                  "status": "unexpected"
+                  "status": "expected"
                 }
               ],
-              "id": "0fd1944cdc0b195623c3-9a9b9c4a09229d4bdb81",
-              "file": "attendance-appshell-popup.spec.ts",
-              "line": 7,
+              "id": "49d1070436a196b67eca-92c36f6c479656ebdcd1",
+              "file": "company-documents-form-validation.spec.ts",
+              "line": 24,
               "column": 7
             },
             {
-              "title": "the popup never renders on /attendance or /login, regardless of check-in state",
+              "title": "CD-VD-03: missing or invalid category is rejected with a 400 enum/required error",
+              "ok": true,
+              "tags": [
+                "regression"
+              ],
+              "tests": [
+                {
+                  "timeout": 90000,
+                  "annotations": [
+                    {
+                      "type": "slow",
+                      "location": {
+                        "file": "/tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/tests/company-documents-form-validation.spec.ts",
+                        "line": 22,
+                        "column": 32
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 762,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-24T16:09:18.773Z",
+                      "annotations": [
+                        {
+                          "type": "slow",
+                          "location": {
+                            "file": "/tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/tests/company-documents-form-validation.spec.ts",
+                            "line": 22,
+                            "column": 32
+                          }
+                        }
+                      ],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/test-results/company-documents-form-val-8e777-h-a-400-enum-required-error/test-finished-1.png"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/test-results/company-documents-form-val-8e777-h-a-400-enum-required-error/trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "49d1070436a196b67eca-9c0b43b33264cb3fbc8b",
+              "file": "company-documents-form-validation.spec.ts",
+              "line": 39,
+              "column": 7
+            },
+            {
+              "title": "CD-VD-04: roleIds/departmentIds/locationIds submitted as non-array values are rejected",
+              "ok": true,
+              "tags": [
+                "regression"
+              ],
+              "tests": [
+                {
+                  "timeout": 90000,
+                  "annotations": [
+                    {
+                      "type": "slow",
+                      "location": {
+                        "file": "/tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/tests/company-documents-form-validation.spec.ts",
+                        "line": 22,
+                        "column": 32
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 574,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-24T16:09:19.585Z",
+                      "annotations": [
+                        {
+                          "type": "slow",
+                          "location": {
+                            "file": "/tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/tests/company-documents-form-validation.spec.ts",
+                            "line": 22,
+                            "column": 32
+                          }
+                        }
+                      ],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/test-results/company-documents-form-val-8ab0f-n-array-values-are-rejected/test-finished-1.png"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/test-results/company-documents-form-val-8ab0f-n-array-values-are-rejected/trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "49d1070436a196b67eca-41df7439a04a6296c79c",
+              "file": "company-documents-form-validation.spec.ts",
+              "line": 47,
+              "column": 7
+            },
+            {
+              "title": "CD-VD-05 (confirmed gap): expiry_date as a non-date, non-empty string passes validation — mirrors CD-NG-13 for effective_date",
+              "ok": true,
+              "tags": [
+                "regression"
+              ],
+              "tests": [
+                {
+                  "timeout": 90000,
+                  "annotations": [
+                    {
+                      "type": "slow",
+                      "location": {
+                        "file": "/tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/tests/company-documents-form-validation.spec.ts",
+                        "line": 22,
+                        "column": 32
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 727,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-24T16:09:20.207Z",
+                      "annotations": [
+                        {
+                          "type": "slow",
+                          "location": {
+                            "file": "/tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/tests/company-documents-form-validation.spec.ts",
+                            "line": 22,
+                            "column": 32
+                          }
+                        }
+                      ],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/test-results/company-documents-form-val-25efe-CD-NG-13-for-effective-date/test-finished-1.png"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/test-results/company-documents-form-val-25efe-CD-NG-13-for-effective-date/trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "49d1070436a196b67eca-b5bc16eaf0f570db4dbd",
+              "file": "company-documents-form-validation.spec.ts",
+              "line": 57,
+              "column": 7
+            },
+            {
+              "title": "CD-VD-06: an extremely long description is accepted (NVARCHAR(MAX), no max-length validation anywhere)",
+              "ok": true,
+              "tags": [
+                "sanity"
+              ],
+              "tests": [
+                {
+                  "timeout": 90000,
+                  "annotations": [
+                    {
+                      "type": "slow",
+                      "location": {
+                        "file": "/tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/tests/company-documents-form-validation.spec.ts",
+                        "line": 22,
+                        "column": 32
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3517,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-24T16:09:21.038Z",
+                      "annotations": [
+                        {
+                          "type": "slow",
+                          "location": {
+                            "file": "/tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/tests/company-documents-form-validation.spec.ts",
+                            "line": 22,
+                            "column": 32
+                          }
+                        }
+                      ],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/test-results/company-documents-form-val-945a7-length-validation-anywhere-/test-finished-1.png"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/test-results/company-documents-form-val-945a7-length-validation-anywhere-/trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "49d1070436a196b67eca-840c65d5e0c10d566c66",
+              "file": "company-documents-form-validation.spec.ts",
+              "line": 66,
+              "column": 7
+            },
+            {
+              "title": "CD-NG-01: uploading a file with an unsupported extension is rejected with a 400 naming the extension",
+              "ok": true,
+              "tags": [
+                "regression"
+              ],
+              "tests": [
+                {
+                  "timeout": 90000,
+                  "annotations": [
+                    {
+                      "type": "slow",
+                      "location": {
+                        "file": "/tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/tests/company-documents-form-validation.spec.ts",
+                        "line": 22,
+                        "column": 32
+                      }
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1091,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-24T16:09:24.679Z",
+                      "annotations": [
+                        {
+                          "type": "slow",
+                          "location": {
+                            "file": "/tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/tests/company-documents-form-validation.spec.ts",
+                            "line": 22,
+                            "column": 32
+                          }
+                        }
+                      ],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/test-results/company-documents-form-val-e280d--a-400-naming-the-extension/test-finished-1.png"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/test-results/company-documents-form-val-e280d--a-400-naming-the-extension/trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "49d1070436a196b67eca-323d16b2dc459b7a4c0c",
+              "file": "company-documents-form-validation.spec.ts",
+              "line": 71,
+              "column": 7
+            }
+          ],
+          "suites": [
+            {
+              "title": "CD-NG-02 / CD-BD-01: file size boundary — exactly 20MB accepted, one byte over rejected",
+              "file": "company-documents-form-validation.spec.ts",
+              "line": 78,
+              "column": 8,
+              "specs": [
+                {
+                  "title": "CD-BD-01 (confirmed gap): a file exactly at the advertised 20MB limit is REJECTED — the effective limit is one byte short of MAX_FILE_SIZE_BYTES",
+                  "ok": true,
+                  "tags": [
+                    "regression"
+                  ],
+                  "tests": [
+                    {
+                      "timeout": 90000,
+                      "annotations": [
+                        {
+                          "type": "slow",
+                          "location": {
+                            "file": "/tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/tests/company-documents-form-validation.spec.ts",
+                            "line": 22,
+                            "column": 32
+                          }
+                        }
+                      ],
+                      "expectedStatus": "passed",
+                      "projectId": "",
+                      "projectName": "",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 3948,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-08-24T16:09:25.946Z",
+                          "annotations": [
+                            {
+                              "type": "slow",
+                              "location": {
+                                "file": "/tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/tests/company-documents-form-validation.spec.ts",
+                                "line": 22,
+                                "column": 32
+                              }
+                            }
+                          ],
+                          "attachments": [
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "/tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/test-results/company-documents-form-val-2788e-hort-of-MAX-FILE-SIZE-BYTES/test-finished-1.png"
+                            },
+                            {
+                              "name": "trace",
+                              "contentType": "application/zip",
+                              "path": "/tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/test-results/company-documents-form-val-2788e-hort-of-MAX-FILE-SIZE-BYTES/trace.zip"
+                            }
+                          ]
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "49d1070436a196b67eca-26b3592c64f31c078856",
+                  "file": "company-documents-form-validation.spec.ts",
+                  "line": 79,
+                  "column": 9
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "employee-list.spec.ts",
+      "file": "employee-list.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Employee List",
+          "file": "employee-list.spec.ts",
+          "line": 4,
+          "column": 6,
+          "specs": [
+            {
+              "title": "EM-FN-06: users.view.team (manager) sees only their reporting subtree",
               "ok": true,
               "tags": [
                 "regression"
@@ -174,25 +582,25 @@
                   "results": [
                     {
                       "workerIndex": 1,
-                      "parallelIndex": 0,
+                      "parallelIndex": 1,
                       "status": "passed",
-                      "duration": 5189,
+                      "duration": 8556,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-08-24T14:05:09.226Z",
+                      "startTime": "2026-08-24T16:09:16.983Z",
                       "annotations": [],
                       "attachments": [
                         {
                           "name": "screenshot",
                           "contentType": "image/png",
-                          "path": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/test-results/attendance-appshell-popup--5dd1b-egardless-of-check-in-state/test-finished-1.png"
+                          "path": "/tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/test-results/employee-list-Employee-Lis-34ebd-nly-their-reporting-subtree/test-finished-1.png"
                         },
                         {
                           "name": "trace",
                           "contentType": "application/zip",
-                          "path": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/test-results/attendance-appshell-popup--5dd1b-egardless-of-check-in-state/trace.zip"
+                          "path": "/tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/test-results/employee-list-Employee-Lis-34ebd-nly-their-reporting-subtree/trace.zip"
                         }
                       ]
                     }
@@ -200,9 +608,9 @@
                   "status": "expected"
                 }
               ],
-              "id": "0fd1944cdc0b195623c3-363dc7cbe0a9b036aca5",
-              "file": "attendance-appshell-popup.spec.ts",
-              "line": 39,
+              "id": "fa296bcb411fb866b639-7ca965f549068396ed8c",
+              "file": "employee-list.spec.ts",
+              "line": 12,
               "column": 7
             }
           ]
@@ -210,168 +618,23 @@
       ]
     },
     {
-      "title": "attendance-permissions.spec.ts",
-      "file": "attendance-permissions.spec.ts",
+      "title": "leave-application.spec.ts",
+      "file": "leave-application.spec.ts",
       "column": 0,
       "line": 0,
       "specs": [],
       "suites": [
         {
-          "title": "Attendance â€” permissions",
-          "file": "attendance-permissions.spec.ts",
-          "line": 25,
+          "title": "Leave Application",
+          "file": "leave-application.spec.ts",
+          "line": 7,
           "column": 6,
           "specs": [
             {
-              "title": "ATE-PM-05: a persona lacking shifts.manage sees no \"New Shift\" button",
-              "ok": true,
-              "tags": [
-                "regression"
-              ],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "",
-                  "projectName": "",
-                  "results": [
-                    {
-                      "workerIndex": 1,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 2714,
-                      "errors": [],
-                      "stdout": [
-                        {
-                          "text": "[AuthenticationManager] [LOGIN] persona=hrDirectory slot=0\n"
-                        },
-                        {
-                          "text": "[AuthenticationManager] [SESSION RECOVERED] persona=hrDirectory slot=0\n"
-                        }
-                      ],
-                      "stderr": [
-                        {
-                          "text": "[AuthenticationManager] [SESSION EXPIRED] persona=hrDirectory slot=0 — cached session is no longer valid.\n"
-                        }
-                      ],
-                      "retry": 0,
-                      "startTime": "2026-08-24T14:05:14.570Z",
-                      "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/test-results/attendance-permissions-Att-7193b-ge-sees-no-New-Shift-button/test-finished-1.png"
-                        },
-                        {
-                          "name": "trace",
-                          "contentType": "application/zip",
-                          "path": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/test-results/attendance-permissions-Att-7193b-ge-sees-no-New-Shift-button/trace.zip"
-                        }
-                      ]
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "1ff5045ce407bb1e5684-8f670b51c5939ac41e56",
-              "file": "attendance-permissions.spec.ts",
-              "line": 26,
-              "column": 7
-            },
-            {
-              "title": "ATE-PM-06: the Work Modes list itself is visible to any authenticated user (GET / is permission-free)",
+              "title": "LV-BD-04: a leave spanning Dec 31 into Jan 1 is accepted",
               "ok": false,
               "tags": [
-                "regression"
-              ],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "",
-                  "projectName": "",
-                  "results": [
-                    {
-                      "workerIndex": 1,
-                      "parallelIndex": 0,
-                      "status": "failed",
-                      "duration": 7900,
-                      "error": {
-                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('heading', { name: 'Work Modes' })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: 'Work Modes' })\u001b[22m\n",
-                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('heading', { name: 'Work Modes' })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: 'Work Modes' })\u001b[22m\n\n    at /tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/tests/attendance-permissions.spec.ts:38:81",
-                        "location": {
-                          "file": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/tests/attendance-permissions.spec.ts",
-                          "column": 81,
-                          "line": 38
-                        },
-                        "snippet": "  36 |     // minimum not error) â€” matches work-modes.routes.js's GET / having no\n  37 |     // permission requirement (see docs/Attendance_AutomationDesign.md Â§6).\n> 38 |     await expect(employeeSelfPage.getByRole('heading', { name: 'Work Modes' })).toBeVisible();\n     |                                                                                 ^\n  39 |     await expect(lookup.newButton).toBeVisible(); // rendered unconditionally â€” see file header note\n  40 |   });\n  41 |"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/tests/attendance-permissions.spec.ts",
-                            "column": 81,
-                            "line": 38
-                          },
-                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('heading', { name: 'Work Modes' })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: 'Work Modes' })\u001b[22m\n\n\n  36 |     // minimum not error) â€” matches work-modes.routes.js's GET / having no\n  37 |     // permission requirement (see docs/Attendance_AutomationDesign.md Â§6).\n> 38 |     await expect(employeeSelfPage.getByRole('heading', { name: 'Work Modes' })).toBeVisible();\n     |                                                                                 ^\n  39 |     await expect(lookup.newButton).toBeVisible(); // rendered unconditionally â€” see file header note\n  40 |   });\n  41 |\n    at /tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/tests/attendance-permissions.spec.ts:38:81"
-                        }
-                      ],
-                      "stdout": [
-                        {
-                          "text": "[AuthenticationManager] [LOGIN] persona=employeeSelf slot=0\n"
-                        },
-                        {
-                          "text": "[AuthenticationManager] [SESSION RECOVERED] persona=employeeSelf slot=0\n"
-                        }
-                      ],
-                      "stderr": [
-                        {
-                          "text": "[AuthenticationManager] [SESSION EXPIRED] persona=employeeSelf slot=0 — cached session is no longer valid.\n"
-                        }
-                      ],
-                      "retry": 0,
-                      "startTime": "2026-08-24T14:05:17.331Z",
-                      "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/test-results/attendance-permissions-Att-3feeb-ser-GET-is-permission-free-/test-failed-1.png"
-                        },
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/test-results/attendance-permissions-Att-3feeb-ser-GET-is-permission-free-/error-context.md"
-                        },
-                        {
-                          "name": "trace",
-                          "contentType": "application/zip",
-                          "path": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/test-results/attendance-permissions-Att-3feeb-ser-GET-is-permission-free-/trace.zip"
-                        }
-                      ],
-                      "errorLocation": {
-                        "file": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/tests/attendance-permissions.spec.ts",
-                        "column": 81,
-                        "line": 38
-                      }
-                    }
-                  ],
-                  "status": "unexpected"
-                }
-              ],
-              "id": "1ff5045ce407bb1e5684-ca22bd1ca1563ca65792",
-              "file": "attendance-permissions.spec.ts",
-              "line": 32,
-              "column": 7
-            },
-            {
-              "title": "ATE-PM-10: an employee retains attendance.checkin capability regardless of the \"Attendance Required For\" opt-out setting",
-              "ok": true,
-              "tags": [
-                "regression"
+                "sanity"
               ],
               "tests": [
                 {
@@ -383,35 +646,75 @@
                   "results": [
                     {
                       "workerIndex": 2,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 4397,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
+                      "parallelIndex": 2,
+                      "status": "failed",
+                      "duration": 15520,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('alert').filter({ hasText: /Leave recorded and approved!|Leave application submitted for approval!/ }).last()\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('alert').filter({ hasText: /Leave recorded and approved!|Leave application submitted for approval!/ }).last()\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('alert').filter({ hasText: /Leave recorded and approved!|Leave application submitted for approval!/ }).last()\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('alert').filter({ hasText: /Leave recorded and approved!|Leave application submitted for approval!/ }).last()\u001b[22m\n\n    at /tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/tests/leave-application.spec.ts:196:106",
+                        "location": {
+                          "file": "/tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/tests/leave-application.spec.ts",
+                          "column": 106,
+                          "line": 196
+                        },
+                        "snippet": "  194 |     await leaves.submit();\n  195 |\n> 196 |     await expect(leaves.toast(/Leave recorded and approved!|Leave application submitted for approval!/)).toBeVisible();\n      |                                                                                                          ^\n  197 |   });\n  198 |\n  199 |   test('LV-BD-05: Saturday is allowed as a start/end date (only Sunday is blocked)', { tag: ['@sanity'] }, async ({ adminPage }) => {"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/tests/leave-application.spec.ts",
+                            "column": 106,
+                            "line": 196
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('alert').filter({ hasText: /Leave recorded and approved!|Leave application submitted for approval!/ }).last()\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('alert').filter({ hasText: /Leave recorded and approved!|Leave application submitted for approval!/ }).last()\u001b[22m\n\n\n  194 |     await leaves.submit();\n  195 |\n> 196 |     await expect(leaves.toast(/Leave recorded and approved!|Leave application submitted for approval!/)).toBeVisible();\n      |                                                                                                          ^\n  197 |   });\n  198 |\n  199 |   test('LV-BD-05: Saturday is allowed as a start/end date (only Sunday is blocked)', { tag: ['@sanity'] }, async ({ adminPage }) => {\n    at /tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/tests/leave-application.spec.ts:196:106"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "[AuthenticationManager] [LOGIN] persona=admin slot=2\n"
+                        },
+                        {
+                          "text": "[AuthenticationManager] [SESSION RECOVERED] persona=admin slot=2\n"
+                        }
+                      ],
+                      "stderr": [
+                        {
+                          "text": "[AuthenticationManager] [SESSION EXPIRED] persona=admin slot=2 — cached session is no longer valid.\n"
+                        }
+                      ],
                       "retry": 0,
-                      "startTime": "2026-08-24T14:05:25.984Z",
+                      "startTime": "2026-08-24T16:09:16.225Z",
                       "annotations": [],
                       "attachments": [
                         {
                           "name": "screenshot",
                           "contentType": "image/png",
-                          "path": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/test-results/attendance-permissions-Att-9bc31-equired-For-opt-out-setting/test-finished-1.png"
+                          "path": "/tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/test-results/leave-application-Leave-Ap-38b2a-c-31-into-Jan-1-is-accepted/test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/test-results/leave-application-Leave-Ap-38b2a-c-31-into-Jan-1-is-accepted/error-context.md"
                         },
                         {
                           "name": "trace",
                           "contentType": "application/zip",
-                          "path": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/test-results/attendance-permissions-Att-9bc31-equired-For-opt-out-setting/trace.zip"
+                          "path": "/tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/test-results/leave-application-Leave-Ap-38b2a-c-31-into-Jan-1-is-accepted/trace.zip"
                         }
-                      ]
+                      ],
+                      "errorLocation": {
+                        "file": "/tmp/maestro/995587e5-a4bc-4717-910e-1867cdf09f16/app/tests/leave-application.spec.ts",
+                        "column": 106,
+                        "line": 196
+                      }
                     }
                   ],
-                  "status": "expected"
+                  "status": "unexpected"
                 }
               ],
-              "id": "1ff5045ce407bb1e5684-8ad4f70d02e86cd1e600",
-              "file": "attendance-permissions.spec.ts",
-              "line": 42,
+              "id": "660fc52df85eb884cf7f-3f4c3c0640be4302dd21",
+              "file": "leave-application.spec.ts",
+              "line": 186,
               "column": 7
             }
           ]
@@ -421,11 +724,11 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-08-24T14:04:57.388Z",
-    "duration": 33281.002,
-    "expected": 3,
+    "startTime": "2026-08-24T16:09:14.770Z",
+    "duration": 17704.144,
+    "expected": 8,
     "skipped": 0,
-    "unexpected": 2,
+    "unexpected": 1,
     "flaky": 0
   }
 }

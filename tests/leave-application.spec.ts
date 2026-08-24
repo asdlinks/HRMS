@@ -188,10 +188,9 @@ test.describe('Leave Application', () => {
     test.skip(new Date(start).getDay() === 0 || new Date(end).getDay() === 0, 'Dec 31 or Jan 1 falls on a Sunday this year â€” blocked by the app\'s own weekend rule, can\'t exercise the year-boundary case this run.');
 
     const leaves = new LeavesPage(adminPage);
-    const emp = await createEmployee(adminPage);
     await leaves.goto();
     await leaves.openApplyDrawer();
-    await leaves.fill({ leaveType: 'Casual', targetEmployee: emp.name, startDate: start, endDate: end, reason: 'E2E: year-boundary span' });
+    await leaves.fill({ leaveType: 'Casual', startDate: start, endDate: end, reason: 'E2E: year-boundary span' });
     await leaves.submit();
 
     await expect(leaves.toast(/Leave recorded and approved!|Leave application submitted for approval!/)).toBeVisible();
