@@ -1,0 +1,11 @@
+{
+  "name": "mywehr-playwright-suite",
+  "private": true,
+  "scripts": { "test": "playwright test" },
+  "devDependencies": {
+    "@playwright/test": "1.61.1",
+    "@types/node": "^22.0.0",
+    "dotenv": "^16.4.7",
+    "typescript": "^5.7.3"
+  }
+}

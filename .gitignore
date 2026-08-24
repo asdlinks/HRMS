@@ -1,0 +1,6 @@
+conversion_meta.json
+browser-*-mcp.json
+.*-login-recipe.json
+node_modules
+test-results
+playwright-report

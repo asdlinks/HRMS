@@ -1,0 +1,2 @@
+#!/bin/sh
+echo "This is plain-text/script content, not a real PDF, deliberately mislabeled with a .pdf extension for CD-SC-04 — proves fileFilter checks the extension only, never actual file content or magic bytes."
