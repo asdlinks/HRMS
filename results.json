@@ -1,0 +1,431 @@
+{
+  "config": {
+    "argv": [
+      "/usr/bin/node",
+      "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/node_modules/.bin/playwright",
+      "test",
+      "--reporter",
+      "json,line,/app/pw-reporter.cjs",
+      "--trace",
+      "on",
+      "--grep",
+      "ATE\\-SM\\-08:\\ shows\\ on\\ a\\ non\\-attendance\\ page\\ when\\ eligible\\ and\\ not\\ checked\\ in;\\ dismisses\\ via\\ close\\ and\\ via\\ backdrop\\ click\\-through|the\\ popup\\ never\\ renders\\ on\\ /attendance\\ or\\ /login,\\ regardless\\ of\\ check\\-in\\ state|ATE\\-PM\\-05:\\ a\\ persona\\ lacking\\ shifts\\.manage\\ sees\\ no\\ \"New\\ Shift\"\\ button|ATE\\-PM\\-06:\\ the\\ Work\\ Modes\\ list\\ itself\\ is\\ visible\\ to\\ any\\ authenticated\\ user\\ \\(GET\\ /\\ is\\ permission\\-free\\)|ATE\\-PM\\-10:\\ an\\ employee\\ retains\\ attendance\\.checkin\\ capability\\ regardless\\ of\\ the\\ \"Attendance\\ Required\\ For\"\\ opt\\-out\\ setting"
+    ],
+    "configFile": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/playwright.config.ts",
+    "rootDir": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/tests",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json"
+      ],
+      [
+        "line"
+      ],
+      [
+        "/app/pw-reporter.cjs"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "attendance-appshell-popup.spec.ts",
+      "file": "attendance-appshell-popup.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "AppShell — missed check-in popup",
+          "file": "attendance-appshell-popup.spec.ts",
+          "line": 6,
+          "column": 6,
+          "specs": [
+            {
+              "title": "ATE-SM-08: shows on a non-attendance page when eligible and not checked in; dismisses via close and via backdrop click-through",
+              "ok": false,
+              "tags": [
+                "smoke"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 10251,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByText(/Tap here to start your day/)\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByText(/Tap here to start your day/)\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByText(/Tap here to start your day/)\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByText(/Tap here to start your day/)\u001b[22m\n\n    at AppShellPopup.expectVisible (/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/pages/components/AppShellPopup.ts:26:33)\n    at /tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/tests/attendance-appshell-popup.spec.ts:17:17",
+                        "location": {
+                          "file": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/pages/components/AppShellPopup.ts",
+                          "column": 33,
+                          "line": 26
+                        },
+                        "snippet": "   at ../pages/components/AppShellPopup.ts:26\n\n  24 |\n  25 |   async expectVisible() {\n> 26 |     await expect(this.bodyText).toBeVisible();\n     |                                 ^\n  27 |   }\n  28 |\n  29 |   async expectHidden() {"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/pages/components/AppShellPopup.ts",
+                            "column": 33,
+                            "line": 26
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByText(/Tap here to start your day/)\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByText(/Tap here to start your day/)\u001b[22m\n\n\n   at ../pages/components/AppShellPopup.ts:26\n\n  24 |\n  25 |   async expectVisible() {\n> 26 |     await expect(this.bodyText).toBeVisible();\n     |                                 ^\n  27 |   }\n  28 |\n  29 |   async expectHidden() {\n    at AppShellPopup.expectVisible (/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/pages/components/AppShellPopup.ts:26:33)\n    at /tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/tests/attendance-appshell-popup.spec.ts:17:17"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-24T14:04:58.080Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/test-results/attendance-appshell-popup--f0851--via-backdrop-click-through/test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/test-results/attendance-appshell-popup--f0851--via-backdrop-click-through/error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/test-results/attendance-appshell-popup--f0851--via-backdrop-click-through/trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/pages/components/AppShellPopup.ts",
+                        "column": 33,
+                        "line": 26
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "0fd1944cdc0b195623c3-9a9b9c4a09229d4bdb81",
+              "file": "attendance-appshell-popup.spec.ts",
+              "line": 7,
+              "column": 7
+            },
+            {
+              "title": "the popup never renders on /attendance or /login, regardless of check-in state",
+              "ok": true,
+              "tags": [
+                "regression"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 5189,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-24T14:05:09.226Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/test-results/attendance-appshell-popup--5dd1b-egardless-of-check-in-state/test-finished-1.png"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/test-results/attendance-appshell-popup--5dd1b-egardless-of-check-in-state/trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "0fd1944cdc0b195623c3-363dc7cbe0a9b036aca5",
+              "file": "attendance-appshell-popup.spec.ts",
+              "line": 39,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "attendance-permissions.spec.ts",
+      "file": "attendance-permissions.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Attendance â€” permissions",
+          "file": "attendance-permissions.spec.ts",
+          "line": 25,
+          "column": 6,
+          "specs": [
+            {
+              "title": "ATE-PM-05: a persona lacking shifts.manage sees no \"New Shift\" button",
+              "ok": true,
+              "tags": [
+                "regression"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2714,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[AuthenticationManager] [LOGIN] persona=hrDirectory slot=0\n"
+                        },
+                        {
+                          "text": "[AuthenticationManager] [SESSION RECOVERED] persona=hrDirectory slot=0\n"
+                        }
+                      ],
+                      "stderr": [
+                        {
+                          "text": "[AuthenticationManager] [SESSION EXPIRED] persona=hrDirectory slot=0 — cached session is no longer valid.\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2026-08-24T14:05:14.570Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/test-results/attendance-permissions-Att-7193b-ge-sees-no-New-Shift-button/test-finished-1.png"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/test-results/attendance-permissions-Att-7193b-ge-sees-no-New-Shift-button/trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "1ff5045ce407bb1e5684-8f670b51c5939ac41e56",
+              "file": "attendance-permissions.spec.ts",
+              "line": 26,
+              "column": 7
+            },
+            {
+              "title": "ATE-PM-06: the Work Modes list itself is visible to any authenticated user (GET / is permission-free)",
+              "ok": false,
+              "tags": [
+                "regression"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 7900,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('heading', { name: 'Work Modes' })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: 'Work Modes' })\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('heading', { name: 'Work Modes' })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: 'Work Modes' })\u001b[22m\n\n    at /tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/tests/attendance-permissions.spec.ts:38:81",
+                        "location": {
+                          "file": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/tests/attendance-permissions.spec.ts",
+                          "column": 81,
+                          "line": 38
+                        },
+                        "snippet": "  36 |     // minimum not error) â€” matches work-modes.routes.js's GET / having no\n  37 |     // permission requirement (see docs/Attendance_AutomationDesign.md Â§6).\n> 38 |     await expect(employeeSelfPage.getByRole('heading', { name: 'Work Modes' })).toBeVisible();\n     |                                                                                 ^\n  39 |     await expect(lookup.newButton).toBeVisible(); // rendered unconditionally â€” see file header note\n  40 |   });\n  41 |"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/tests/attendance-permissions.spec.ts",
+                            "column": 81,
+                            "line": 38
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('heading', { name: 'Work Modes' })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: 'Work Modes' })\u001b[22m\n\n\n  36 |     // minimum not error) â€” matches work-modes.routes.js's GET / having no\n  37 |     // permission requirement (see docs/Attendance_AutomationDesign.md Â§6).\n> 38 |     await expect(employeeSelfPage.getByRole('heading', { name: 'Work Modes' })).toBeVisible();\n     |                                                                                 ^\n  39 |     await expect(lookup.newButton).toBeVisible(); // rendered unconditionally â€” see file header note\n  40 |   });\n  41 |\n    at /tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/tests/attendance-permissions.spec.ts:38:81"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "[AuthenticationManager] [LOGIN] persona=employeeSelf slot=0\n"
+                        },
+                        {
+                          "text": "[AuthenticationManager] [SESSION RECOVERED] persona=employeeSelf slot=0\n"
+                        }
+                      ],
+                      "stderr": [
+                        {
+                          "text": "[AuthenticationManager] [SESSION EXPIRED] persona=employeeSelf slot=0 — cached session is no longer valid.\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2026-08-24T14:05:17.331Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/test-results/attendance-permissions-Att-3feeb-ser-GET-is-permission-free-/test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/test-results/attendance-permissions-Att-3feeb-ser-GET-is-permission-free-/error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/test-results/attendance-permissions-Att-3feeb-ser-GET-is-permission-free-/trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/tests/attendance-permissions.spec.ts",
+                        "column": 81,
+                        "line": 38
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "1ff5045ce407bb1e5684-ca22bd1ca1563ca65792",
+              "file": "attendance-permissions.spec.ts",
+              "line": 32,
+              "column": 7
+            },
+            {
+              "title": "ATE-PM-10: an employee retains attendance.checkin capability regardless of the \"Attendance Required For\" opt-out setting",
+              "ok": true,
+              "tags": [
+                "regression"
+              ],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 4397,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-24T14:05:25.984Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/test-results/attendance-permissions-Att-9bc31-equired-For-opt-out-setting/test-finished-1.png"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/tmp/maestro/8352d44d-31be-46cc-a6dc-25b2b857618b/app/test-results/attendance-permissions-Att-9bc31-equired-For-opt-out-setting/trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "1ff5045ce407bb1e5684-8ad4f70d02e86cd1e600",
+              "file": "attendance-permissions.spec.ts",
+              "line": 42,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-08-24T14:04:57.388Z",
+    "duration": 33281.002,
+    "expected": 3,
+    "skipped": 0,
+    "unexpected": 2,
+    "flaky": 0
+  }
+}
