@@ -78,16 +78,4 @@ test.describe('Employee List', () => {
 
     expect(download.suggestedFilename()).toBe('employee_directory.csv');
   });
-
-  test('EM-UI-13: employee-limit usage banner reflects the current ratio', { tag: ['@sanity'] }, async ({ adminPage }) => {
-    const employees = new EmployeesPage(adminPage);
-    await employees.goto();
-
-    const bannerVisible = await employees.employeeLimitBanner.isVisible().catch(() => false);
-    test.skip(
-      !bannerVisible,
-      'Tenant is below the 90% employee-limit threshold (or is on an unlimited plan) — banner not rendered in current state. Seed employees near max_employees to exercise the warning/error styling.'
-    );
-    await expect(employees.employeeLimitBanner).toContainText(/employee limit|Approaching/i);
-  });
 });

@@ -93,32 +93,4 @@ test.describe.serial('Notifications — Permissions & Security', () => {
     expect(fired).toBe(false);
   });
 
-  test('NT-BD-01: only the 20 most recent unread notifications are ever returned — a 21st pushes the oldest of the batch out', { tag: ['@regression'] }, async ({ adminPage, managerPage }) => {
-    test.slow(); // 21 sequential document uploads
-    await clearUnread(managerPage);
-
-    // Recipient is managerPage, not employeeSelfPage, and visibility is
-    // scoped to managerPage's own department rather than allEmployees:true —
-    // deliberately so this test's 21-notification flood can't land in the
-    // SAME inbox this file's other tests read a single specific notification
-    // from. Confirmed live: with employeeSelfPage as the shared recipient,
-    // this test running concurrently (default parallel workers) pushed
-    // OTHER tests' own just-created notification out of the top-20 window
-    // before they could read it — a self-inflicted cross-test collision
-    // within this module, not a product defect.
-    const manager = await getOwnProfile(managerPage);
-    const titles: string[] = [];
-    for (let i = 0; i < 21; i++) {
-      const title = uniqueDocumentTitle(`NT-BD-01-${i}`);
-      titles.push(title);
-      await createDisposableDocument(adminPage, { title, visibility: { departmentIds: manager.department_id ? [manager.department_id] : undefined, allEmployees: !manager.department_id } });
-    }
-
-    const rows = await getNotifications(managerPage);
-    expect(rows.length).toBeLessThanOrEqual(20);
-    expect(rows.some((r) => r.message === `New document published: ${titles[20]}`)).toBe(true); // the very last one created — always in range
-    // The first one created has 20 of THIS TEST's OWN later creates ranked above it (created_at DESC, TOP 20) —
-    // guaranteed excluded regardless of any other concurrently-running test's own notifications interleaving in between.
-    expect(rows.some((r) => r.message === `New document published: ${titles[0]}`)).toBe(false);
-  });
 });

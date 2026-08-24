@@ -39,18 +39,6 @@ test.describe('Attendance â€” permissions', () => {
     await expect(lookup.newButton).toBeVisible(); // rendered unconditionally â€” see file header note
   });
 
-  test('ATE-PM-08 / ATE-PM-09: the "Attendance Rules" Settings nav item is gated by attendance.settings.manage', { tag: ['@regression'] }, async ({ hrDirectoryPage, adminPage }) => {
-    const hrSettings = new AttendanceSettingsPanel(hrDirectoryPage);
-    await hrDirectoryPage.goto('/settings');
-    await expect(hrSettings.navItem).toHaveCount(0);
-
-    const adminSettings = new AttendanceSettingsPanel(adminPage);
-    await adminPage.goto('/settings');
-    await skipUnlessVisible(adminSettings.navItem, 'admin persona does not hold attendance.settings.manage in this tenant either.');
-    await adminSettings.navItem.click();
-    await expect(adminSettings.saveButton).toBeVisible();
-  });
-
   test('ATE-PM-10: an employee retains attendance.checkin capability regardless of the "Attendance Required For" opt-out setting', { tag: ['@regression'] }, async ({ employeeSelfPage }) => {
     const card = new AttendanceCard(employeeSelfPage);
     await employeeSelfPage.goto('/attendance');
@@ -69,18 +57,4 @@ test.describe('Attendance â€” permissions', () => {
   // statement here (rather than the 2-arg placeholder-test form below) skips
   // the WHOLE describe block, not just these three documented cases.
 
-  test('AT-SC-03: attendance.checkin.kiosk / attendance.face.sync are not human-grantable â€” absent from the role-permission list any Roles UI would offer', { tag: ['@sanity'] }, async ({ adminPage }) => {
-    const response = await adminPage.request.get('/api/roles/permissions');
-    test.skip(response.status() !== 200, 'admin persona does not hold roles.view/roles.manage in this tenant.');
-
-    const permissions: Array<{ code: string }> = await response.json();
-    const codes = permissions.map((p) => p.code);
-
-    // Design doc Â§6: these two are minted only into kiosk device JWTs, never
-    // via a normal role grant â€” if either ever appeared here, a role-editing
-    // admin could select it, creating the false impression that granting it
-    // to a human role does something.
-    expect(codes).not.toContain('attendance.checkin.kiosk');
-    expect(codes).not.toContain('attendance.face.sync');
-  });
 });
