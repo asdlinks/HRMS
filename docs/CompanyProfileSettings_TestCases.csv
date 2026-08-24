@@ -1,0 +1,53 @@
+Test ID,Category,Feature,Scenario,Priority,Expected Result
+CP-FN-01,Functional,Company Profile,GET /company,High,"Full profile returned incl. joined subscription_plans fields (storage_limit_mb, max_employees, enabled_modules)"
+CP-FN-02,Functional,Company Profile,PUT /company with a full valid payload,High,"Name/address/contact/currency/date_format/FY-start-month/theme colors all updated"
+CP-FN-03,Functional,Theming,Update theme_primary_color/theme_secondary_color,Medium,MUI palette rebuilt from the new hex values via ThemeModeProvider on next session load
+CP-FN-04,Functional,Settings Read,GET /settings,High,"All keys (payroll_settings, attendance_rules, leave_allocations, attendance_link) returned to any authenticated user"
+CP-FN-05,Functional,Settings Write,POST /settings/bulk for payroll_settings with payroll.settings.manage,High,Key updated successfully
+CP-FN-06,Functional,Settings Write,POST /settings/bulk for attendance_rules with attendance.settings.manage,High,Key updated successfully
+CP-FN-07,Functional,Settings Write,POST /settings/bulk for leave_allocations with general.settings.manage,High,Key updated successfully
+CP-FN-08,Functional,Settings Write,POST /settings/bulk for attendance_link with general.settings.manage,Medium,Key updated successfully
+CP-FN-09,Functional,UI,Settings > Company Profile tab renders and saves,Medium,Round-trips correctly via GET/PUT /company
+CP-FN-10,Functional,UI,Settings > General Config tab renders Leave Allocations + Attendance Link,Medium,Both sections function and save via POST /settings/bulk
+CP-NG-01,Negative,Company Profile,PUT /company without company.manage,Critical,"403 — confirmed this includes HR/Payroll Admin/Attendance Admin roles BY DEFAULT, since tenantProvisioning.service.js grants company.manage only to super_admin out of the box"
+CP-NG-02,Negative,Company Profile,GET /company without company.view or company.manage,High,403 forbidden
+CP-NG-03,Negative,Company Profile,PUT /company with an invalid contact_email format,High,400 validation error
+CP-NG-04,Negative,Company Profile,"PUT /company with a malformed theme color (e.g. ""red"", 3-digit ""#fff"", or missing #)",High,400 — rejected by the ^#[0-9A-Fa-f]{6,8}$ regex
+CP-NG-05,Negative,Company Profile,PUT /company with financial_year_start_month outside 1-12,High,400 range validation error
+CP-NG-06,Negative,Company Profile,"PUT /company with currency=""banana"" via direct API (bypassing the UI dropdown)",High,"Confirmed gap: accepted — no z.enum exists, only a 1-10 character length cap"
+CP-NG-07,Negative,Company Profile,"PUT /company with date_format=""not-a-format"" via direct API",High,"Confirmed gap: accepted — no z.enum exists, only a 1-20 character length cap"
+CP-NG-08,Negative,Settings Write,POST /settings/bulk with a payload containing ONLY an unmapped/unknown key (e.g. {""foo"":""bar""}),Critical,"Confirmed CRITICAL gap: succeeds with ZERO permission check — KEY_PERMISSION[key] is undefined, so the guard short-circuits false and the write proceeds for any authenticated user"
+CP-NG-09,Negative,Settings Write,"POST /settings/bulk with a mixed payload (one gated key the caller lacks permission for + one unmapped key)",High,"403 — the guard loop runs fully before any write, so the whole request is rejected atomically, including the otherwise-unguarded key"
+CP-NG-10,Negative,Settings Write,POST /settings/bulk for payroll_settings without payroll.settings.manage,High,403 forbidden
+CP-NG-11,Negative,Settings Write,"Save an obviously malicious value into attendance_link (e.g. ""javascript:alert(1)"")",Medium,"Confirmed gap: accepted silently with zero validation — flagged as low-risk-today only because no current rendering surface consumes this field anywhere else in the app"
+CP-BD-01,Boundary,Company Profile,contact_email as empty string vs null vs a valid address,Medium,All three accepted per the schema's union type
+CP-BD-02,Boundary,Theming,theme color at 6 hex digits vs 8 (alpha) vs 7 (invalid),Medium,"6 and 8 accepted; 7 rejected by the regex"
+CP-BD-03,Boundary,Company Profile,financial_year_start_month at exactly 1 and 12 vs 0 and 13,Medium,"1 and 12 accepted, 0 and 13 rejected"
+CP-VD-01,Validation,companyProfileUpdateSchema,Missing name (the only required field),High,400 required-field error
+CP-VD-02,Validation,settingsBulkSchema,"Confirm it is z.record(z.string(), z.unknown()) with zero shape/type validation on any key's value",Critical,"Confirmed critical gap, cross-referenced with the identical finding in the Payroll/RBAC/Leave modules"
+CP-VD-03,Validation,Company Profile,currency/date_format have no z.enum despite dedicated fixed-list UI dropdowns implying one exists,High,"Confirmed gap — server accepts any string within the length cap regardless of the UI's implied fixed list"
+CP-UI-01,UI,Settings Tabs,Company Profile tab visibility,High,"Gated by company.manage ONLY, not company.view — confirmed UI/API mismatch: a view-only role (e.g. default manager/hr, which hold company.view) never sees this tab even though GET /company would succeed for them via direct API call"
+CP-UI-02,UI,Settings Tabs,General Config tab visibility,High,"Gated by general.settings.manage ONLY, not general.settings.view — identical mismatch pattern as CP-UI-01"
+CP-UI-03,UI,Company Profile,Currency/date-format/FY-start dropdowns,Medium,"Restrict input to a fixed list client-side only — trivially bypassed via direct API per CP-NG-06/07"
+CP-UI-04,UI,Theming,Native <input type=color> color pickers,Low,Browser always emits a valid 6-digit hex — the UI path itself can never produce an invalid value
+CP-UI-05,UI,Company Profile,Logo upload file input (accept=""image/*""),Medium,"Cosmetic filter only — no real size/type check client-side beyond the schema's very high string-length ceiling"
+CP-UI-06,UI,General Config,Attendance Link field,Medium,"Confirmed dead/unused-downstream field: free text with no format hint, no consumer anywhere else in the app besides this form and an empty seed value at provisioning"
+CP-UI-07,UI,Theming,Pick a very light/pale primary theme color (e.g. near-white),Medium,"Confirmed visual-regression risk: contrastText is hardcoded to '#fff' regardless of chosen color lightness, producing low-contrast/illegible button text"
+CP-AP-01,API,GET /company,Contract check,Medium,Matches documented field set incl. joined plan fields
+CP-AP-02,API,PUT /company,Contract + validation-error shape check,High,Matches companyProfileUpdateSchema exactly
+CP-AP-03,API,GET /settings,Contract check — confirm no permission guard exists,Critical,"Re-confirmed: any authenticated user of an active tenant reads every settings key regardless of role/permission"
+CP-AP-04,API,POST /settings/bulk,Contract check — confirm per-key KEY_PERMISSION enforcement AND the unmapped-key bypass,Critical,Matches the exact behavior documented in CP-NG-08/09
+CP-DB-01,Database Validation,tenants/company profile columns,Verify currency/date_format have no CHECK constraint,Medium,"Confirmed — DB enforces only column type/length (NVARCHAR(10)/(20)), nothing else"
+CP-DB-02,Database Validation,settings table,Verify it is a generic key-value store with no per-key schema enforcement at the DB level either,Medium,Confirmed — validation (where it exists at all) lives entirely in KEY_PERMISSION/module-specific consumers, never in the table structure
+CP-SC-01,Security,Settings Write Bypass (CRITICAL),Re-confirm the unmapped-key permission bypass from a security lens,Critical,"Any authenticated user can write arbitrary key/value pairs into the tenant's settings table by simply using a key name outside the 4 known KEY_PERMISSION entries"
+CP-SC-02,Security,Settings Read Exposure,Re-confirm GET /settings has no permission guard,Critical,"Duplicate confirmation across modules — payroll_settings/attendance_rules/leave_allocations/attendance_link all readable by any authenticated user"
+CP-SC-03,Security,Default Permission Grant Gap,Confirm only super_admin holds company.manage by default across all seeded roles,High,"HR/Payroll/Attendance Admin cannot edit Company Profile out of the box — flag for stakeholder confirmation this is intentional, not an oversight"
+CP-SC-04,Security,API-Level Fuzzing,"Submit garbage currency/date_format/theme values directly via API, bypassing the UI's fixed lists",High,"Accepted values could break downstream rendering or confuse any future logic that assumes the UI's implied fixed list — flag as a defense-in-depth gap even though no active exploit path was found today"
+CP-SC-05,Security,Decorative Currency Field,"Change Company Profile currency from INR to USD, then generate a payslip/payroll export",High,"Confirmed gap: currency/symbol/formatting in payslips and payroll exports does NOT change — no payroll code anywhere reads tenants.currency; the field is purely decorative on the Company Profile form itself"
+CP-SC-06,Security,Injection,SQL injection payloads in company profile free-text fields (address, city, etc.),Critical,Parameterized queries prevent injection
+CP-PF-01,Performance,Settings Growth,GET /settings response size as more keys accumulate over a tenant's lifetime,Low,"No cap exists on distinct key count — verify no meaningful performance degradation as the table grows"
+CP-PF-02,Performance,Write Latency,PUT /company and POST /settings/bulk under normal load,Low,Both complete within acceptable SLA
+CP-PM-01,Permission Testing,company.view vs company.manage,Verify read vs write separation at the API layer,High,"GET succeeds with either; PUT requires company.manage specifically — contrast with the UI's stricter (manage-only) tab visibility per CP-UI-01"
+CP-PM-02,Permission Testing,general.settings.view vs general.settings.manage,Verify the same read/write API separation exists even though the UI only checks .manage,High,Matches the pattern in CP-UI-02
+CP-PM-03,Permission Testing,payroll.settings.manage / attendance.settings.manage,Confirm these are the only two KEY_PERMISSION entries with a plausible dedicated permission,Medium,"leave_allocations and attendance_link are both gated by the unrelated-sounding general.settings.manage instead of a leaves- or attendance-specific code"
+CP-PM-04,Permission Testing,Settings Write Allowlist Gap,Confirm the settings write path is NOT a true allowlist of writable keys,Critical,"Duplicate of CP-SC-01 from a permission-boundary lens — anything outside the 4 known keys is unguarded by design/oversight, not merely under-permissioned"

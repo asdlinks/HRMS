@@ -1,0 +1,55 @@
+Test ID,Category,Feature,Scenario,Priority,Expected Result
+TA-FN-01,Functional,Login,Login with valid tenantCode/email/password,High,"200, access token returned in body, httpOnly refresh cookie mywe_refresh_token set (path /api/auth)"
+TA-FN-02,Functional,Refresh,POST /auth/refresh with a valid cookie,High,"200, refresh token rotated (old revoked, new inserted with replaced_by link), new access token issued"
+TA-FN-03,Functional,Logout,POST /auth/logout,High,"Refresh token row revoked server-side, cookie cleared, always 200 {success:true}"
+TA-FN-04,Functional,Change Password,Self-service change-password with correct current password,High,"200 {success:true, message:'Password updated successfully'}; ALL of the user's refresh tokens revoked"
+TA-FN-05,Functional,Kiosk Login,POST /auth/kiosk-login with a valid deviceKey,Medium,Device session issued via the same rate-limiter/lockout pattern as human login
+TA-FN-06,Functional,Kiosk Refresh,POST /auth/kiosk-refresh,Medium,Mirrors the human refresh rotation and theft-detection logic for the device principal
+TA-FN-07,Functional,Admin Password Reset,HR/admin resets another user's password via PATCH /users/:id/reset-password,High,New password bcrypt-hashed and persisted; see TA-SC-01 for a related session-survival gap
+TA-NG-01,Negative,Login,Missing tenantCode/email/password,High,"400 ""Company code, email and password are required"""
+TA-NG-02,Negative,Login,Unknown tenantCode,High,"401 ""Invalid company code, email or password"" (no enumeration signal)"
+TA-NG-03,Negative,Login,Tenant status is suspended or cancelled,High,"403 ""This company's account is currently suspended. Contact support."""
+TA-NG-04,Negative,Login,Unknown email within a valid tenant,High,"401 ""Invalid company code, email or password"" — identical message to TA-NG-02"
+TA-NG-05,Negative,Login,User status is disabled or exited,High,"403 ""This account has been disabled. Contact your administrator."""
+TA-NG-06,Negative,Login,Account currently locked (locked_until in the future),High,"429 ""Too many failed login attempts. Please try again in a few minutes."""
+TA-NG-07,Negative,Login,Correct tenantCode/email, wrong password,High,"401 ""Invalid company code, email or password"" — identical message to unknown-email/unknown-tenant cases"
+TA-NG-08,Negative,Refresh,No refresh cookie present,High,"401 ""Not authenticated"""
+TA-NG-09,Negative,Refresh,Unknown/expired refresh token,High,"401 ""Session expired, please log in again"""
+TA-NG-10,Negative,Refresh,Replay of an already-revoked refresh token (theft/reuse detection),Critical,"All of that user's refresh tokens revoked, cookie cleared, 401 ""Session invalidated, please log in again"""
+TA-NG-11,Negative,Refresh,Tenant suspended or user disabled mid-session, then refresh attempted,High,"403 with the matching suspended/disabled message, refresh denied even with an otherwise-valid token"
+TA-NG-12,Negative,Change Password,Wrong current password,High,"400 ""Current password is incorrect"""
+TA-NG-13,Negative,Rate Limiting,21st login attempt from the same IP within 15 minutes,High,"429 ""Too many login attempts from this location. Please try again later."""
+TA-NG-14,Negative,Login,Malformed email format posted directly to the API (bypassing the client SPA),Medium,"Confirmed gap: no server-side email-format check exists on /login — only a truthy-presence check, so a malformed email is NOT rejected by format"
+TA-BD-01,Boundary,Lockout,4th vs 5th consecutive failed login attempt,High,"5th attempt sets locked_until=now+15min and resets the counter; 4th does not lock the account"
+TA-BD-02,Boundary,Rate Limiter,20th vs 21st login attempt from the same IP in 15 minutes,High,"20th allowed through to auth logic, 21st blocked (tenant's IP limit is 20/15min, looser than Platform Admin's 10/15min)"
+TA-BD-03,Boundary,Access Token,Token used at exactly its 15-minute TTL boundary,Medium,Valid up to expiry; rejected immediately after (triggering the client's refresh flow)
+TA-BD-04,Boundary,Refresh Token,Token used at exactly its 30-day TTL boundary,Medium,"Valid up to expiry; ""Session expired"" after"
+TA-BD-05,Boundary,Change Password,newPassword at exactly 6 characters vs 5,Medium,"6 accepted, 5 rejected"
+TA-VD-01,Validation,Login,Confirm no Zod schema exists on this endpoint at all,High,"Confirmed gap: only a truthy-presence check (!tenantCode||!email||!password) — no email-format, no length checks of any kind"
+TA-VD-02,Validation,changePasswordSchema,newPassword below 6 characters,High,400 validation error
+TA-VD-03,Validation,kioskLoginSchema,Missing tenantCode/deviceName/deviceKey,Medium,400 required-field error
+TA-UI-01,UI,Login page,Type a malformed email and submit,Medium,"Blocked client-side by react-hook-form + zodResolver's real email() check — contrast with TA-NG-14's server-side gap"
+TA-UI-02,UI,Login page,Click ""Forgot your password?"",Medium,"Expands an info alert directing the user to contact HR/admin — no self-service reset flow exists or is linked"
+TA-UI-03,UI,Session Persistence,Inspect browser storage after login,High,"No access token in localStorage/sessionStorage — held only in an in-memory JS variable; refresh token exists only as an httpOnly cookie"
+TA-UI-04,UI,Auto-Refresh Interceptor,Trigger a 401 mid-session on a non-auth API call,High,"Axios interceptor calls /auth/refresh once (guarded by an _retry flag), updates the in-memory token, and retries the original request transparently"
+TA-UI-05,UI,Logout,Trigger logout when the API call itself fails/errors,Medium,"Local session state is still cleared in a finally block regardless of the API call's outcome"
+TA-AP-01,API,POST /auth/login,Full contract + exact error-message check across every branch,High,"Matches the documented messages/status codes exactly for each failure mode"
+TA-AP-02,API,POST /auth/refresh,Contract check incl. cookie rotation,High,New cookie value differs from the presented one on every successful call
+TA-AP-03,API,POST /auth/logout,Contract check,Medium,"Always 200 {success:true}, with or without a valid cookie present"
+TA-AP-04,API,POST /auth/kiosk-login and /auth/kiosk-refresh,Contract check,Medium,Mirrors the human auth contract for the device principal
+TA-AP-05,API,POST /auth/change-password,Contract check,High,"Requires a valid access token (authenticate middleware); identity taken from the token, not the body"
+TA-DB-01,Database Validation,users.failed_login_attempts/locked_until,Verify increment/lockout/reset behavior matches the 5-attempt/15-min thresholds,High,Matches auth.repository.js exactly
+TA-DB-02,Database Validation,refresh_tokens,Inspect stored values,Critical,"Only a SHA-256 hash of the refresh token is stored — the raw value never persists server-side"
+TA-DB-03,Database Validation,refresh_tokens.replaced_by,Verify the rotation chain links correctly across multiple refreshes,Medium,Each revoked row correctly points to its successor via replaced_by
+TA-SC-01,Security,Admin Password Reset Session Survival,Admin force-resets a user's password while that user has an existing valid refresh-token session on another device,Critical,"Confirmed gap: PATCH /users/:id/reset-password does NOT call revokeAllUserRefreshTokens (unlike self-service change-password) — the old session's refresh cookie remains valid and can silently mint new access tokens until its own 30-day expiry"
+TA-SC-02,Security,No Self-Service Reset,Confirm no forgot-password/email-token flow exists anywhere,High,"Confirmed by design — password reset is exclusively admin-initiated (users.password.reset) or self-service via known-current-password change"
+TA-SC-03,Security,Refresh Theft Detection,Present a revoked/already-rotated refresh token,Critical,All sessions for that user revoked immediately — duplicate of TA-NG-10 from a security lens
+TA-SC-04,Security,Cookie Attributes,Inspect the refresh cookie's flags,High,"httpOnly always; secure in production; sameSite 'none' in prod / 'lax' in dev; scoped to path /api/auth"
+TA-SC-05,Security,Access Token Revocation,Log out, then replay the still-unexpired access token against a protected route,High,"Confirmed gap: the access token remains valid until its own ~15-minute expiry even after logout — only the refresh chain is killed"
+TA-SC-06,Security,Account Enumeration,Compare the exact response for unknown tenant / unknown email / wrong password,High,"All three return the identical ""Invalid company code, email or password"" message — no distinguishing signal"
+TA-SC-07,Security,Dual Rate-Limit Layers,Verify IP-based rate limiting (20/15min) and per-account lockout (5/15min) trigger independently,High,Each layer fires on its own threshold without one bypassing the other
+TA-SC-08,Security,Injection,SQL injection payloads in tenantCode/email fields,Critical,Parameterized queries prevent injection
+TA-PF-01,Performance,Login,Latency under concurrent load given bcrypt's cost factor,Medium,Response time remains within acceptable SLA under realistic concurrent login volume
+TA-PF-02,Performance,Refresh Rotation,Concurrent refresh calls with the same token,Medium,"Only one rotation succeeds cleanly; the other is handled per the theft-detection logic without corrupting session state"
+TA-PM-01,Permission Testing,users.unlock,Verify required for the admin force-unlock action,Medium,Blocked without this permission
+TA-PM-02,Permission Testing,users.password.reset,Verify required for admin-initiated password reset,High,Blocked without this permission

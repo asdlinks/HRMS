@@ -1,0 +1,28 @@
+{
+  "name": "leave-management-tool-root",
+  "version": "1.0.0",
+  "description": "Root folder for Leave Management Tool to run client and server concurrently",
+  "scripts": {
+    "install-all": "npm.cmd install && cd client && npm.cmd install && cd ../server && npm.cmd install",
+    "dev": "concurrently \"npm.cmd run dev-server\" \"npm.cmd run dev-client\"",
+    "dev-server": "cd server && npx.cmd nodemon index.js",
+    "dev-client": "cd client && npm.cmd run dev",
+    "e2e": "npx playwright test e2e/tests --grep \"@smoke\" --reporter=html --workers=3",
+    "e2e:smoke": "npx playwright test e2e/tests --grep \"@smoke\" --reporter=html --workers=3",
+    "e2e:essential": "npx playwright test e2e/tests --grep \"@smoke\" --reporter=html --workers=3",
+    "e2e:regression": "npx playwright test e2e/tests --grep \"@regression\" --reporter=html --workers=3",
+    "e2e:exploratory": "npx playwright test e2e/tests/security.spec.ts e2e/tests/shifts.spec.ts e2e/tests/tenant-auth-kiosk.spec.ts e2e/tests/tenant-auth-rate-limit.spec.ts e2e/tests/voice-commands-permissions-security.spec.ts e2e/tests/voice-commands-validation.spec.ts --reporter=html --workers=2",
+    "e2e:smoke:ui": "npx playwright test e2e/tests --grep \"@smoke\" --ui",
+    "e2e:ui": "npx playwright test e2e/tests --ui",
+    "e2e:full": "npx playwright test e2e/tests --reporter=html",
+    "e2e:report": "npx playwright show-report e2e/report",
+    "e2e:typecheck": "tsc -p e2e/tsconfig.json"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.0",
+    "@types/node": "^26.1.1",
+    "concurrently": "^8.2.2",
+    "dotenv": "^17.4.2",
+    "typescript": "^7.0.2"
+  }
+}

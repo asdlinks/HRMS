@@ -1,0 +1,58 @@
+Test ID,Category,Feature,Scenario,Priority,Expected Result
+RP-FN-01,Functional,Catalog,GET /reports/catalog,High,"Only reports visible to the caller's permissions are returned, each flagged with its stub status"
+RP-FN-02,Functional,Dashboard,GET /reports/dashboard/summary with at least one qualifying reports.*.view.* permission,High,KPI/dashboard aggregate data returned
+RP-FN-03,Functional,Table Report,GET /:reportId/data for a real table-mode report,High,Paginated, sorted rows returned matching the registry's declared columns
+RP-FN-04,Functional,Bespoke Report,GET /:reportId/data for a bespoke-mode report (e.g. attendance-trend),High,Aggregate JSON shape (e.g. chart-ready buckets) returned instead of a row table
+RP-FN-05,Functional,Export CSV,GET /:reportId/export (default format),High,CSV file streamed matching on-screen columns
+RP-FN-06,Functional,Export Excel,GET /:reportId/export?format=xlsx,Medium,XLSX file streamed correctly
+RP-FN-07,Functional,Export PDF,GET /:reportId/export?format=pdf,Medium,PDF file streamed correctly
+RP-FN-08,Functional,Favorites,Favorite then retrieve a report via POST/GET /reports/favorites,Medium,Favorited report id persists and appears in the favorites list
+RP-FN-09,Functional,Favorites,Remove a favorite,Low,Report id removed from the favorites list
+RP-FN-10,Functional,Saved Filters,Save a named filter set and retrieve it,Medium,Filter JSON persists and round-trips correctly
+RP-FN-11,Functional,Saved Filters,Delete a saved filter,Low,Removed from the list
+RP-FN-12,Functional,Scope Resolution,Verify own/team/all precedence across attendance/payroll/leave/employee categories,Critical,"resolveScope consistently picks the highest scope held (.all > .team > .own) via the single centralized helper"
+RP-FN-13,Functional,Stub Reports,Request attendance-regularization/compliance-overview/audit-trail via /data,Medium,"Returns {rows:[], total:0, stub:true} with no query ever executed"
+RP-FN-14,Functional,Organization Category,Request any org-* report as a flatPermission holder,Medium,"Tenant-wide data returned with no own/team/all scoping applied — confirmed correct opt-out design"
+RP-FN-15,Functional,Export Cap,Export a report with more than 50,000 matching rows,High,"Output is capped at 50,000 rows with a visible ""Export truncated at 50000 rows"" marker appended, not a silent cutoff"
+RP-FN-16,Functional,Drill-Down,Click a bar on one of the 4 drill-down-enabled dashboard summaries,Medium,Navigates into employee-master pre-filtered by the clicked dimension
+RP-NG-01,Negative,Data,GET /:reportId/data for an unknown reportId,High,404 not found
+RP-NG-02,Negative,Data,GET /:reportId/data for a report the caller has no scope for,High,403 forbidden
+RP-NG-03,Negative,Export,GET /:reportId/export for a stub report,High,400 rejected — no query is ever attempted
+RP-NG-04,Negative,Export,GET /:reportId/export?format=foo (an unrecognized format string),Medium,"Confirmed gap: silently falls back to CSV rather than returning a 400 for the invalid format"
+RP-NG-05,Negative,Favorites,POST /reports/favorites/:reportId with an arbitrary/nonexistent reportId string,High,"Confirmed gap: succeeds with no registry validation — the id is never checked against getReport()"
+RP-NG-06,Negative,Saved Filters,POST /reports/saved-filters for a reportId the caller has no visibility into,High,"Confirmed gap: succeeds with no cross-check against the caller's actual scope for that report"
+RP-NG-07,Negative,Search Filter,Submit a search value containing literal % or _ characters,Medium,"Confirmed functional bug (not injection): behaves as a SQL wildcard rather than a literal character, since LIKE-wildcard escaping is absent"
+RP-NG-08,Negative,Date Filters,Submit dateFrom/dateTo as invalid date strings,High,"Confirmed gap: no schema exists at all for report filters — an invalid date surfaces as a raw driver-level error, not a clean 400"
+RP-NG-09,Negative,Payroll Period Filter,Submit periodYear/periodMonth as non-numeric garbage,Medium,"Confirmed gap: parseInt(...) || currentValue silently falls back to the current month/year — never errors, never warns the caller their filter was ignored"
+RP-NG-10,Negative,Export Sort Mismatch,Sort the on-screen table by a non-default column, then export,High,"Confirmed inconsistency: export always uses entry.defaultSortField, ignoring the client's chosen sortField — exported row order differs from what was on screen"
+RP-BD-01,Boundary,Export Cap,Result set at exactly 50,000 rows vs 50,001,High,"Exactly 50,000 exports cleanly with no marker; 50,001+ triggers the truncation marker"
+RP-BD-02,Boundary,Scope Precedence,Caller holding exactly one of own/team/all for a given prefix vs holding none,Medium,"Exactly one grants that scope; none results in the report being invisible/403 rather than defaulting to any scope"
+RP-VD-01,Validation,Report Filters,Confirm zero schema validation exists anywhere in reports.routes.js,Critical,"Confirmed — the most severe instance of the validation-gap pattern in this codebase; req.query flows straight into query-building with no shape/format checks at all"
+RP-VD-02,Validation,Saved Filters,POST /reports/saved-filters body,Medium,"Only reportId && name are checked for truthiness; the filters object itself is stored as opaque, unvalidated JSON"
+RP-UI-01,UI,ReportsNav,Category list rendering,High,"Only categories present in the server-filtered catalog appear — no separate client-side permission logic exists, fully server-driven"
+RP-UI-02,UI,ReportFilterBar,Attempt to change a report-specific filter not in the fixed control set (periodYear/periodMonth/monthsBack/daysAhead/isActive),Critical,"Confirmed functional gap: NO UI control exists for these registry-declared filters — users can never change them from the standard UI and always get server-side defaults (e.g. Payroll Summary is permanently stuck on the current month on screen)"
+RP-UI-03,UI,AnalyticsWorkspace,Switch between reports within a category via the chip strip,Medium,Navigates via a ?report= query param without a full page reload
+RP-UI-04,UI,Export Menu,Use the Print option,Low,"Triggers window.print() of the current page — not a real server export, purely a browser print"
+RP-UI-05,UI,Favorites/Saved Filters Pages,Verify they call the same unguarded backend routes,Medium,Confirmed — no additional client-side validation layered on top
+RP-UI-06,UI,Legacy Bookmark,Navigate to an old /reports/:reportId URL,Low,Redirects correctly into the new /reports/:category?report=:id workspace URL via the catalog lookup
+RP-AP-01,API,GET /reports/catalog,Contract check,Medium,Includes the stub flag per entry
+RP-AP-02,API,GET /reports/dashboard/summary,Contract + guard check,High,403 without at least one qualifying reports.*.view.* permission
+RP-AP-03,API,GET /:reportId/data,Contract check for both table and bespoke modes,High,Correct shape per entry.mode
+RP-AP-04,API,GET /:reportId/export,Contract check across csv/xlsx/pdf,Medium,Correct content-type/streaming behavior per format
+RP-AP-05,API,Favorites and Saved Filters endpoints,Contract check,Medium,Confirmed no registry/permission validation on any of the six sub-routes
+RP-DB-01,Database Validation,dbo.fn_report_team_scope,Verify team-scope resolution correctness,High,Correctly resolves to the requester's direct-report subtree (or whatever scope the function defines) consistently across every category repository
+RP-DB-02,Database Validation,Parameterization,Audit every report repository for string-concatenated filter values,Critical,"Confirmed: none found — all values bound via typed params (sql.Int/NVarChar/Date); only column names are ever hardcoded from the registry, never client-supplied"
+RP-DB-03,Database Validation,Sort-Field Whitelisting,Attempt to submit a sortField not present in entry.columns,Medium,Rejected/ignored — allowedSortFields is server-defined from the registry, not client-controlled
+RP-SC-01,Security,Reports/Raw Permission Split (CRITICAL),"Grant a custom role only reports.payroll.view.all (no payroll.assign/.process/.approve/.view.*), request payroll-bank-transfer",Critical,"Confirmed structural finding (by migration 032's own design, not a one-off bug): full access to bank account number/IFSC/UPI ID granted through this permission alone — resolveScope/applyScope never cross-reference the raw payroll.* tree"
+RP-SC-02,Security,Audit Report Stub,Confirm reports.audit.view gates a feature that doesn't exist yet,High,"No audit_log table exists anywhere — the permission is correctly restricted to super_admin, but there is nothing real behind it (deliberately deferred per project history)"
+RP-SC-03,Security,LIKE-Wildcard Leak,Search using a string containing % or _,Medium,"Confirmed functional/security-adjacent bug — behaves as a wildcard rather than literal text, potentially returning broader results than intended"
+RP-SC-04,Security,Injection Resistance,SQL injection payloads across every filter/search field in every report category,Critical,Parameterized queries prevent injection consistently across the whole engine
+RP-SC-05,Security,Export Trust,Compare exported row order against on-screen sort,Medium,"Duplicate of RP-NG-10 from a data-integrity lens — flag as a trust/consistency concern for anyone relying on export order matching what they reviewed on screen"
+RP-PF-01,Performance,Export Streaming,Export a report near the 50,000-row cap,Medium,Rows streamed via callback rather than buffered — memory usage stays bounded
+RP-PF-02,Performance,Catalog Visibility Filtering,Tenant with many custom roles/permission combinations,Medium,GET /reports/catalog filtering completes within SLA
+RP-PF-03,Performance,Dashboard Summary,KPI aggregation at large tenant/data scale,Medium,GET /reports/dashboard/summary completes within SLA
+RP-PM-01,Permission Testing,Scope Precedence Centralization,Confirm resolveScope/applyScope is the single implementation used by every category repository,High,"Contrast with Leave's duplicated day-counting anti-pattern — reports correctly centralize this logic in one place"
+RP-PM-02,Permission Testing,Organization Category Opt-Out,Confirm organizationReports never applies own/team/all scoping,Medium,flatPermission-only design confirmed correct
+RP-PM-03,Permission Testing,reports.audit.view Restriction,Confirm only super_admin holds this by default,Medium,Matches migration 032's seed
+RP-PM-04,Permission Testing,Export Permission Bundling,Confirm no separate reports.*.export permission exists anywhere,High,View and export share identical visibility checks — export is never independently gated
+RP-PM-05,Permission Testing,Favorites/Saved-Filters Guard Gap,Confirm these 6 sub-routes require only authentication,Medium,"Low-severity given /data and /export independently re-check visibility on every real access, but flag as an inconsistency with the rest of the module's permission model"

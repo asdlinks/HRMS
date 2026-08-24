@@ -1,0 +1,94 @@
+Test ID,Category,Feature,Scenario,Priority,Expected Result
+LV-FN-01,Functional,Leave Application,Employee applies for their own leave with valid type/dates,High,"201, leave created with status Pending"
+LV-FN-02,Functional,Leave Application,HR/admin applies leave for another employee via leaves.apply.any,High,"Leave auto-approved immediately (isAdminSubmission), status='Approved'"
+LV-FN-03,Functional,Leave Application,Apply for a leave with an end_date in the past,High,"Auto-approved (isPastLeave), not blocked"
+LV-FN-04,Functional,Flexi Holiday,Apply for a Flexi Holiday within the 2/year cap,Medium,"Auto-approved unconditionally, skips balance check, notification always sent"
+LV-FN-05,Functional,Leave List,View own leaves (leaves.view.own),High,Only the caller's own leave rows returned
+LV-FN-06,Functional,Leave List,View team leaves (leaves.view.team) as a manager,High,"Own leaves plus direct reports' leaves only (not recursive subtree)"
+LV-FN-07,Functional,Leave List,View all leaves (leaves.view.all),High,"Tenant-wide leave rows returned, excluding any super_admin rows"
+LV-FN-08,Functional,Approval,Approve a Pending leave (leaves.approve),High,"Status transitions to Approved; owner notified"
+LV-FN-09,Functional,Approval,Reject a Pending leave,High,"Status transitions to Rejected; owner notified"
+LV-FN-10,Functional,Cancellation,Employee cancels their own Pending or Approved leave,High,"Status transitions to Cancelled; manager/admins notified"
+LV-FN-11,Functional,Cancellation,HR cancels another employee's leave via leaves.cancel.any,High,Status transitions to Cancelled
+LV-FN-12,Functional,Voice Commands,APPROVE_LEAVE / REJECT_LEAVE voice intent for a matching Pending leave,Medium,Status updated via the same underlying repository call
+LV-FN-13,Functional,Half-Day Leave,Apply a half-day leave,High,Counted as exactly 0.5 day in balance/usage math
+LV-FN-14,Functional,Leave Balance,Leave-balance widget shows Allocated vs Used per configured type,Medium,Values match the underlying day-counting formula for the current year
+LV-FN-15,Functional,Leave Allocations Config,Admin configures leave_allocations via Settings > General,Medium,"Saved to the tenant's settings JSON, gated by general.settings.manage"
+LV-FN-16,Functional,Notifications,Manager notified when a subordinate applies for leave (target holds leaves.notify_on_apply),Medium,Notification created for the applicant's manager_id
+LV-FN-17,Functional,Notifications,All super_admins notified when the applicant has no manager_id,Medium,Notification fanned out to every super_admin in the tenant
+LV-FN-18,Functional,Notifications,Owner notified when their leave is approved/rejected via the PATCH endpoint,High,"status_update notification created for leave.user_id"
+LV-FN-19,Functional,Attendance Integration,Approved leave surfaced on the Attendance monthly calendar,High,"Returned as a separate leaves[] array alongside attendance[]; no attendance row is ever written for a leave day"
+LV-FN-20,Functional,Payroll Integration,Approved leave days included in a payroll run's paidLeaveDays,High,"Overlapping Approved leave days subtracted from LOP calculation for the affected cycle"
+LV-NG-01,Negative,Leave Application,Apply for another user without leaves.apply.any,High,"403 ""You do not have permission to apply for other employees."""
+LV-NG-02,Negative,Leave Application,Apply with a nonexistent user_id,High,"404 ""User not found"""
+LV-NG-03,Negative,Leave Application,Apply for an Earned/Paid-type leave while within the probation period,High,"400 ""Earned/Paid Leave is not available during your probation period."""
+LV-NG-04,Negative,Leave Application,"Apply during probation for a custom type whose name merely CONTAINS ""paid"" (e.g. an ""Unpaid"" type)",High,"Confirmed naming-collision gap: incorrectly blocked by the same string-contains check intended only for Earned/Paid leave"
+LV-NG-05,Negative,Leave Application,Apply with start_date or end_date falling on a Sunday or a configured holiday,High,"400 ""You cannot select a Sunday or Holiday as start/end date."""
+LV-NG-06,Negative,Leave Application,Apply with dates overlapping an existing Pending or Approved leave for the same user,High,"409 ""You already have a leave request overlapping these dates"""
+LV-NG-07,Negative,Flexi Holiday,Apply for a 3rd Flexi Holiday in the same calendar year,High,"400 ""Flexi Holiday limit reached (Max 2 per year)"""
+LV-NG-08,Negative,Leave Application,Apply for more days than the remaining allocation for that type,High,"400 ""Insufficient leave balance"""
+LV-NG-09,Negative,Leave Application,Apply using a type string not present in settings.leave_allocations,High,"Confirmed gap: balance check is skipped entirely — leave created with no day-limit enforcement whatsoever"
+LV-NG-10,Negative,Leave Application,Apply with end_date earlier than start_date,Critical,"Confirmed gap: no validation anywhere (schema or route) — produces a negative/zero day count that silently corrupts balance-used math, and the row persists with no DB constraint blocking it"
+LV-NG-11,Negative,Status Update,PATCH /leaves/:id with status='Pending',Medium,400 — Zod enum deliberately excludes 'Pending' as a settable value
+LV-NG-12,Negative,Approval,Approve or reject a leave not currently in Pending status,High,"409 ""Cannot approve/reject a leave request that is already {status}"""
+LV-NG-13,Negative,Cancellation,Cancel a leave not currently in Pending or Approved status,High,"409 ""Cannot cancel a leave request that is already {status}"""
+LV-NG-14,Negative,Cancellation,Cancel another employee's leave without leaves.cancel.any,High,403 forbidden
+LV-NG-15,Negative,Approval,Approve/reject without leaves.approve,High,403 forbidden (inline check — route has no middleware-level guard)
+LV-NG-16,Negative,Leave Application,Apply without leaves.apply.own or leaves.apply.any,High,403 forbidden
+LV-NG-17,Negative,Leave List,View leaves without any of leaves.view.own/.team/.all,High,403 forbidden
+LV-NG-18,Negative,Approval,"A leaves.approve holder approves/rejects their OWN Pending leave (self-approval)",Critical,"Confirmed gap: succeeds — no ownership comparison exists in the approve/reject branch at all"
+LV-NG-19,Negative,Cancellation,Cancel an Approved leave that has already started or already completed via a direct API call,High,"Confirmed gap: succeeds — the ""hasn't started yet"" restriction exists only in the LeaveCancellationPage client filter, never enforced server-side"
+LV-NG-20,Negative,Concurrency,Fire two concurrent POST /leaves for the same user with identical/overlapping dates,High,"Confirmed race-condition risk: no unique index or transactional isolation prevents both from passing the app-layer overlap check before either commits"
+LV-BD-01,Boundary,Flexi Holiday,Exactly the 2nd Flexi Holiday of the year vs the 3rd,High,"2nd accepted, 3rd rejected"
+LV-BD-02,Boundary,Leave Balance,usedDays + requestedDays exactly equal to allocation.days vs one day over,High,"Exact match accepted (>  check, not >=), one day over rejected"
+LV-BD-03,Boundary,Half-Day,Half-day leave submitted spanning multiple calendar days via direct API,Medium,"Confirmed gap: still counted as exactly 0.5 day despite the multi-day span — server never checks start_date===end_date when is_half_day=true"
+LV-BD-04,Boundary,Year Boundary,Leave spanning December 31 into January 1,Medium,Verify usedDays year-filtering (YEAR(start_date)=@year) correctly attributes/splits days across the boundary
+LV-BD-05,Boundary,Weekend Rule,start_date/end_date on a Saturday vs a Sunday,Medium,"Saturday allowed (explicitly excluded from the block); Sunday rejected"
+LV-BD-06,Boundary,Probation,Leave applied exactly on the last day of the probation period vs the first day after,Medium,"Last probation day still blocked for Earned/Paid; first day after allowed"
+LV-VD-01,Validation,leaveApplySchema,Missing type/start_date/end_date,High,400 required-field validation error
+LV-VD-02,Validation,leaveApplySchema,is_half_day submitted as a non-boolean value,Medium,400 validation error
+LV-VD-03,Validation,leaveStatusUpdateSchema,status outside Approved/Rejected/Cancelled,High,400 enum validation error
+LV-VD-04,Validation,leaveStatusUpdateSchema,cancellation_reason submitted as an empty string on cancel,Medium,"Confirmed inconsistency: accepted server-side (no min-length) despite the client form requiring a non-empty reason"
+LV-VD-05,Validation,half_day_session,Submit an arbitrary free-text value via direct API,Medium,"Confirmed gap: no enum constraint exists at schema or DB level — any string is accepted, though the UI never sets this field itself"
+LV-VD-06,Validation,reason field,Submit an extremely long reason string,Low,"Accepted — NVARCHAR(MAX) column with no max-length validation anywhere"
+LV-UI-01,UI,LeavesPage,"""Apply for Leave"" button visibility",High,"Confirmed gap: rendered unconditionally, not gated by hasPermission('leaves.apply.own') — a user with neither apply permission still sees and can open the form, only failing with 403 on submit"
+LV-UI-02,UI,LeavesPage,Leave-balance cards per type,Medium,Progress bars reflect Allocated vs Used correctly for each configured type
+LV-UI-03,UI,LeavesPage,Status-filter chips (All/Pending/Approved/Rejected/Cancelled),Medium,"""Cancellation Pending"" rows (if any exist) are bucketed into the Pending filter"
+LV-UI-04,UI,LeavesPage,Approve/Reject buttons visibility,High,Rendered only for canApprove holders and only active on rows with status==='Pending'
+LV-UI-05,UI,LeavesPage,Toggle the half-day switch in the Apply drawer,Medium,"Forces end_date=start_date and hides the End Date field (client-only convenience, not server-enforced — see LV-BD-03)"
+LV-UI-06,UI,LeaveCancellationPage,Dropdown of cancellable leaves,Medium,"Filtered client-side to the caller's own Approved/Pending leaves with start_date >= today (""upcoming"" only) — not enforced by the API itself"
+LV-UI-07,UI,LeaveCancellationPage,Submit cancellation with an empty reason,Medium,Blocked client-side by the required textarea attribute (contrast with LV-VD-04's server-side acceptance)
+LV-UI-08,UI,LeaveAllocationChart,Render Allocated vs Used bar chart,Low,Values match the dashboard's own leaveTypeBreakdown computation
+LV-UI-09,UI,ApprovalsQueueCard,Render top-5 pending approvals preview,Low,"Deep-links to /leaves; no duplicate approve/reject action exposed here"
+LV-UI-10,UI,ManagerDashboard,7-day ""who's on leave"" strip,Low,"Half-day entries show an (H) suffix on the avatar"
+LV-UI-11,UI,LeavesPage,Date-picker minimum bound on Start/End Date fields,Medium,"Confirmed gap: hardcoded to the literal '2026-01-01' rather than computed dynamically from today — allows freely picking genuinely past dates with zero friction"
+LV-UI-12,UI,SettingsPage,Add/remove Leave Allocation type rows,Medium,"Saved via POST /settings/bulk, gated by general.settings.manage"
+LV-AP-01,API,GET /leaves,Scope precedence verification (all > team > own),High,A user holding multiple view permissions gets the broadest applicable scope
+LV-AP-02,API,GET /leaves,departmentId and userId query param filtering,Medium,Results correctly narrowed by each filter
+LV-AP-03,API,POST /leaves,Contract check,High,"Returns {id, status}"
+LV-AP-04,API,PATCH /leaves/:id,Approve/Reject contract,High,"Returns {success:true}"
+LV-AP-05,API,PATCH /leaves/:id,Cancel contract,Medium,"Returns {success:true, status:'Cancelled'}"
+LV-AP-06,API,POST /voice/execute,APPROVE_LEAVE/REJECT_LEAVE contract,Medium,"Status updated identically to the manual PATCH path, but see LV-SC-05 for the notification gap"
+LV-DB-01,Database Validation,leaves.status,Verify 'Cancellation Pending' (a valid CHECK value) never actually appears on any row produced by current code,Medium,"No code path sets this status — regression check confirms it stays purely a legacy/dead enum member"
+LV-DB-02,Database Validation,leaves,FK_leaves_user / FK_leaves_tenant integrity,Medium,Invalid user_id or tenant_id insertion rejected by FK constraints
+LV-DB-03,Database Validation,leaves,Insert two overlapping rows for the same user directly at the DB layer,High,"Confirmed gap: no unique constraint or exclusion constraint exists — only the app-layer hasOverlappingLeave check prevents this, and only through the normal API path"
+LV-DB-04,Database Validation,leaves.type,Verify column is free-text NVARCHAR(50) with no lookup/enum table,Medium,"Confirmed — any string value is insertable, matching against settings.leave_allocations only by exact (case-insensitive) string comparison"
+LV-DB-05,Database Validation,leaves.half_day_session,Verify no DB-level enum/CHECK constraint exists,Low,Any string value accepted at the DB layer
+LV-SC-01,Security,Approval scope,Confirm leaves.approve is not manager-scoped,Critical,"Any tenant-wide holder of leaves.approve can approve/reject ANY employee's leave, not just their own direct reports — confirmed by both route code and RBAC seed"
+LV-SC-02,Security,Self-approval,Confirm self-approval is exploitable by any leaves.approve holder,Critical,"Duplicate of LV-NG-18 from a security-boundary lens — flag as a permission-model gap"
+LV-SC-03,Security,Settings exposure,Read GET /api/settings as a role with no leaves.*/general.settings.* permission,Critical,"Confirmed gap: leave_allocations (and all other settings keys) are readable by any authenticated user regardless of permission — no guard exists on this read path"
+LV-SC-04,Security,Notification permission check,Verify leaves.notify_on_apply is checked via a fresh DB query on the TARGET user rather than the requester's cached JWT permissions,Medium,"Confirms this specific check is not subject to the ~15-minute JWT-staleness window that applies to most other permission checks in this codebase"
+LV-SC-05,Security,Voice-command notification gap,Approve/reject a leave via the voice interface,High,"Confirmed gap: no notification is ever created for the employee — the approval/rejection could go unnoticed by the affected employee entirely"
+LV-SC-06,Security,Injection,SQL injection payloads in the reason/cancellation_reason free-text fields,Critical,Parameterized queries prevent injection
+LV-SC-07,Security,Cross-tenant isolation,Attempt to view/approve/cancel a leave belonging to another tenant by guessing/incrementing its id,Critical,404/403 — all leave lookups are scoped to the caller's tenant_id
+LV-PF-01,Performance,GET /leaves,leaves.view.all at large tenant scale (many employees, multi-year history),Medium,Response time within SLA
+LV-PF-02,Performance,Leave Balance,Balance computation performance at scale across the three independently-reimplemented day-counting formulas,Medium,Each formula (route, repository, reports repository) completes within SLA and returns consistent results for the same dataset
+LV-PF-03,Performance,Payroll Integration,Leave-overlap computation during a payroll run for a large employee/date-range set,Medium,rangesOverlap/getOverlappingLeaveDays scale acceptably across the full active-employee set
+LV-PM-01,Permission Testing,leaves.view.own/.team/.all,Verify scoping and precedence,High,"Own = caller's rows only; team = caller's rows plus direct reports only (not recursive); all = tenant-wide minus super_admin rows"
+LV-PM-02,Permission Testing,leaves.apply.own vs leaves.apply.any,Verify separation,High,".own only allows applying for oneself; .any is required to apply on behalf of another user, and triggers auto-approval when used"
+LV-PM-03,Permission Testing,leaves.approve,Verify it is a single flat permission with no manager-relationship dimension,Critical,Confirmed — matches LV-SC-01
+LV-PM-04,Permission Testing,leaves.cancel.any vs implicit self-cancel,Verify no leaves.cancel.own permission exists — ownership alone is sufficient to cancel one's own leave,Medium,Confirmed by code — self-cancel requires no permission at all beyond being the record's owner
+LV-PM-05,Permission Testing,leaves.notify_on_apply default grants,Verify seeded only to employee and hr roles by default (not manager/super_admin),Medium,"A manager applying for their own leave triggers no notification to anyone unless explicitly granted this permission"
+LV-PM-06,Permission Testing,reports.leave.view.own/.team/.all,Verify this is a fully separate permission tree from leaves.view.*,High,A role can hold one without the other — confirm actual behavior of the Reports Dashboard's leave widgets under each combination
+LV-PM-07,Permission Testing,general.settings.manage,Verify required to edit leave_allocations via POST /settings/bulk,Medium,Blocked without this permission; read access remains ungated per LV-SC-03
+LV-PM-08,Permission Testing,super_admin leave visibility exclusion,"Confirm a super_admin, even holding leaves.view.all, cannot see their OWN leave history through GET /leaves",High,"Confirmed gap: every scope branch explicitly excludes role='super_admin' rows, including from the requester's own results"

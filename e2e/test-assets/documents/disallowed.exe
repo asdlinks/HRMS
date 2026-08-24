@@ -1,0 +1,1 @@
+E2E test fixture for CD-NG-01 — an extension outside ALLOWED_EXTENSIONS (server/routes/companyDocuments.routes.js). Content is irrelevant; only the .exe extension matters.

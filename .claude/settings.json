@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//tmp/**)",
+      "Bash(curl -s -X PATCH http://localhost:5001/api/users/9 -H 'Authorization: Bearer __CMDSUB_OUTPUT__' -H 'Content-Type: application/json' -d '{\"designation\":null}' -w '\\\\nSTATUS:%{http_code}\\\\n')",
+      "Bash(node -r dotenv/config -e ' *)",
+      "Bash(powershell -Command \"Stop-Process -Id 21476 -Force\")",
+      "Bash(node -e ' *)",
+      "Bash(curl -s -X POST http://localhost:5001/api/auth/login -H 'Content-Type: application/json' -d '{\"tenantCode\":\"acmetest\",\"email\":\"admin@acmetest.example.com\",\"password\":\"lHB2IQNqTV7d!Aa1\"}')",
+      "Bash(node -pe ' *)",
+      "Bash(cat /tmp_token.txt)",
+      "Bash(curl -s -w '\\\\nHTTP %{http_code}\\\\n' http://localhost:5003/api/users/49 -X DELETE -H 'Authorization: Bearer __CMDSUB_OUTPUT__')"
+    ]
+  }
+}

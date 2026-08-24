@@ -1,0 +1,31 @@
+Test ID,Category,Feature,Scenario,Priority,Expected Result
+NT-FN-01,Functional,List,GET /notifications for a user with unread items,High,"Returns up to 20 unread rows, ordered created_at DESC"
+NT-FN-02,Functional,Mark Read,POST /notifications/read,High,"ALL of the caller's unread rows flipped to is_read=1 in one bulk update; returns {success:true}"
+NT-FN-03,Functional,Bell Badge,Badge count reflects the number of items returned,Medium,Matches the unread list length
+NT-FN-04,Functional,Deep Link,Click a notification that has a non-null link (e.g. a Company Documents notification),High,"Navigates to that link and closes the dropdown (which also triggers mark-all-read)"
+NT-FN-05,Functional,Deep Link,Company Documents publish/version-update notification,Medium,"Correctly populated with link='/company-documents', clickable end-to-end"
+NT-FN-06,Functional,No Link,Leave apply/cancel/status-change notification,Medium,"link is never set by these call sites — renders as plain, non-clickable text (cursor:default)"
+NT-FN-07,Functional,Implicit Read,Open the bell dropdown, then click away or navigate elsewhere,High,"closeNotifications() fires POST /notifications/read as a side effect — everything just viewed is now marked read"
+NT-NG-01,Negative,Single Mark-Read,Attempt to mark only ONE notification as read,Medium,"Confirmed gap: no such endpoint exists — the only write operation is the bulk mark-all-read"
+NT-NG-02,Negative,Delete,Attempt to delete a notification,Medium,"Confirmed gap: no delete endpoint exists at all"
+NT-NG-03,Negative,History,Attempt to retrieve previously-read notifications,Medium,"Confirmed gap: listUnread only ever returns unread rows — once read, a notification disappears from the API permanently with no history view"
+NT-NG-04,Negative,Dead Permission,Confirm notifications.manage is never checked by any route,High,"Confirmed — the permission is seeded and assigned to roles but has zero effect anywhere in the codebase"
+NT-NG-05,Negative,Legacy Param Regression,Attempt to pass a :userId or :id route/query param to either endpoint,High,"Confirmed closed: both endpoints only ever use req.auth.userId/tenantId — no client-controllable identifier exists, closing the pre-Milestone-1 IDOR the code comment references"
+NT-BD-01,Boundary,List Cap,Exactly 20 vs 21 unread notifications existing,Medium,"Only the 20 most recent are returned (TOP 20); the 21st is invisible until one of the top 20 is cleared"
+NT-BD-02,Boundary,Field Length,message/type/link fields at their DB column limits vs unbounded,Low,"message (NVARCHAR(MAX)) and link (NVARCHAR(500)) have no application-layer length validation at creation time"
+NT-UI-01,UI,Bell Badge,Compare badge count logic to the API response,Low,"Client-side .filter(!is_read) is redundant since the API already returns unread-only rows — always equals the full array length"
+NT-UI-02,UI,Dropdown Styling,Unread-accent left border on each item,Low,"Cosmetic only — every returned item is unread by construction, so the border always renders"
+NT-UI-03,UI,Real-Time Delivery,A new notification is created server-side while the user has the app open,High,"Confirmed gap: does NOT appear until the dropdown is reopened or the app remounts — no polling, no websocket/SSE push exists"
+NT-UI-04,UI,Click Without Link,Click a notification with link=null,Medium,No navigation occurs; cursor is 'default' not 'pointer'
+NT-AP-01,API,GET /notifications,Contract check,Medium,No permission gate beyond authentication; scoped strictly to the caller's own tenant_id+user_id
+NT-AP-02,API,POST /notifications/read,Contract check,Medium,"Bulk-only; always returns {success:true}"
+NT-DB-01,Database Validation,notifications,FK_notifications_user integrity,Medium,Invalid user_id insertion rejected by FK constraint
+NT-DB-02,Database Validation,notifications.type,Verify no CHECK constraint/enum exists,Medium,"Confirmed free-text NVARCHAR(50) — any string accepted, no taxonomy enforced"
+NT-DB-03,Database Validation,Tenant/User Isolation,Attempt to read another user's or another tenant's notifications via any code path,Critical,"Impossible today — every query is scoped by req.auth-derived tenant_id/user_id with no client-controllable override"
+NT-SC-01,Security,Input Validation at Creation,Inspect whether createNotification validates message/type/link before insert,High,"Confirmed gap: zero validation — any calling module can pass arbitrary unvalidated strings, including from user-controllable data (e.g. an employee's own name)"
+NT-SC-02,Security,XSS Rendering,Create a notification whose message embeds a name containing HTML/script-like characters,High,"Verify React's default text-escaping in the dropdown MenuItem prevents any injection — should render as literal text, not execute"
+NT-SC-03,Security,Malicious Link Scheme,Persist a notification with link set to a javascript: or data: URI (only reachable via direct DB/API misuse since no validation exists),High,"Verify navigate(n.link) does not execute an untrusted scheme — React Router's navigate should treat it as a path, not a script trigger; confirm no open-redirect/XSS vector exists"
+NT-SC-04,Security,IDOR Regression Guard,"Re-confirm no per-id endpoint exists that could later reintroduce the old vulnerable pattern",Medium,"Flag as a standing regression check for whenever a Notification Center with per-item endpoints is eventually built"
+NT-PF-01,Performance,Table Growth,notifications table with no archiving/cleanup mechanism over a long-lived tenant,Medium,"Verify GET /notifications performance doesn't degrade as historical (already-read) rows accumulate indefinitely with no purge job"
+NT-PM-01,Permission Testing,notifications.manage,Confirm this permission has zero enforcement anywhere,Critical,"Duplicate of NT-NG-04 from a permission-boundary lens — dead/vestigial permission code"
+NT-PM-02,Permission Testing,Base Endpoints,Confirm GET /notifications and POST /notifications/read require only authentication (no specific permission),High,"Any authenticated tenant user can access these for their OWN data only"

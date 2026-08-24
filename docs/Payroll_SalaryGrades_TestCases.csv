@@ -1,0 +1,124 @@
+Test ID,Category,Feature,Scenario,Priority,Expected Result
+PR-FN-01,Functional,Salary Components,Create a component of each calculation_type (fixed/percent_ctc/percent_gross/percent_of_component/slab),High,"Component created with type-specific fields persisted"
+PR-FN-02,Functional,Salary Components,Update/delete a component,Medium,"Referenced component soft-deactivates ({success:true, deactivated:true}); unreferenced component hard-deletes"
+PR-FN-03,Functional,Salary Structures,Create/update/delete a salary structure,High,CRUD succeeds
+PR-FN-04,Functional,Salary Structures,Replace a structure's components via PUT /structures/:id/components,High,Full component list replaced atomically with override_value/sort_order applied
+PR-FN-05,Functional,Salary Grades,Create/update/delete a salary grade,High,CRUD succeeds with code/name/min-mid-max amounts persisted
+PR-FN-06,Functional,Salary Grades,View a grade's associated structures via GET /:id/structures,Medium,Correct linked structures returned
+PR-FN-07,Functional,Salary Assignment,Assign a salary (structure/CTC/effective_from) to an employee,High,"New open assignment created; prior open assignment auto-closed (effective_to = new effective_from - 1 day)"
+PR-FN-08,Functional,Salary Assignment,View salary assignment history for a user (?userId=),Medium,Full chronological history of assignments returned
+PR-FN-09,Functional,Payroll Run,Create a payroll run for a period,High,"Run created with status Draft, cycle_start/end_date computed"
+PR-FN-10,Functional,Payroll Run,Process a Draft/Processing run,High,"Lines computed via computeRunLines and saved; status set to Processing"
+PR-FN-11,Functional,Payroll Run,Re-process (recompute) a Draft/Processing run,Medium,"Prior lines wiped and rewritten idempotently, reflecting any data changes since first process"
+PR-FN-12,Functional,Payroll Run,Approve a Processing run,High,Status transitions to Approved
+PR-FN-13,Functional,Payroll Run,Pay an Approved run,High,"Status transitions to Paid; all payslips in the run are published"
+PR-FN-14,Functional,Payroll Run,Cancel a Draft/Processing run,Medium,"Status transitions to Cancelled; consumed overtime entries released (payroll_run_id cleared)"
+PR-FN-15,Functional,Payroll Run,Export an Approved/Paid run as CSV,High,CSV downloaded with the documented column set
+PR-FN-16,Functional,Payroll Run,Publish all payslips for a run,Medium,All payslips in the run marked is_published=true
+PR-FN-17,Functional,Overtime,Apply an overtime entry (employee/manager),High,Entry created with status Pending
+PR-FN-18,Functional,Overtime,Approve/reject an overtime entry (manager, not the claimant),High,Status updated to Approved/Rejected
+PR-FN-19,Functional,Payslips,View own/team/all payslips per permission scope,High,Correct scoped list returned
+PR-FN-20,Functional,Payslips,Publish an individual payslip,Medium,is_published set true for that payslip
+PR-FN-21,Functional,Payslips,View a payslip detail (marks it viewed),Medium,first_viewed_at set on first view; view_count increments on each view
+PR-FN-22,Functional,Payroll Settings,View/update payroll settings (pay cycle/OT multiplier/rounding rule),Medium,Settings JSON persisted and reflected in subsequent runs
+PR-FN-23,Functional,Payroll Reports,View dashboard summary/component-breakdown/trend,Medium,Correct aggregate data returned
+PR-FN-24,Functional,LOP Calculation,Verify lopDays = clamp(workingDays - presentDays - paidLeaveDays, 0, workingDays) across a run,Critical,LOP and prorationFactor computed correctly for a representative employee
+PR-FN-25,Functional,Overtime Pay,Verify OT amount uses the unprorated base component rate x standard_monthly_hours x ot_rate_multiplier,High,"OT rate unaffected by that month's own LOP proration, per design"
+PR-NG-01,Negative,Salary Components/Structures/Grades,Create with a code/name already used in the tenant,High,409 duplicate conflict
+PR-NG-02,Negative,Salary Grades,Delete a grade referenced by a structure or an active assignment,High,"409 ""linked to a structure or employee assignment"""
+PR-NG-03,Negative,Salary Structures,Delete a structure referenced by employee_salary_assignments,High,409 conflict
+PR-NG-04,Negative,Salary Grades,Create/update a grade with min_amount greater than max_amount,Critical,"Confirmed gap: no Zod or route-layer check exists — request hits the raw DB CK_salary_grades_range violation and surfaces as an unhandled 500, not a friendly 400"
+PR-NG-05,Negative,Salary Assignment,Submit without user_id/structure_id/effective_from,High,400 required-field validation error
+PR-NG-06,Negative,Salary Assignment,Submit a negative ctc_annual,Medium,"No Zod floor exists — only the DB CHECK (ctc_annual>=0) rejects it, likely surfacing as an unhandled error rather than 400"
+PR-NG-07,Negative,Payroll Run,Create with period_month outside 1-12,High,400 manual range-check error
+PR-NG-08,Negative,Payroll Run,Create a run for a period that already exists for the tenant,High,409 duplicate-period conflict
+PR-NG-09,Negative,Payroll Run,Call /process on a run already Approved,High,409 conflict — processing only allowed from Draft/Processing
+PR-NG-10,Negative,Payroll Run,Process a run when an actively-assigned employee is missing required banking fields,High,"400 listing the missing employees by name (assertBankingComplete)"
+PR-NG-11,Negative,Payroll Run,Call /approve on a run not in Processing status,High,409 conflict
+PR-NG-12,Negative,Payroll Run,Call /pay on a run not in Approved status,High,409 conflict
+PR-NG-13,Negative,Payroll Run,Two concurrent /approve or /pay calls on the same run,High,"Second call gets 409 ""status changed concurrently"" via optimistic-concurrency check (rowsAffected=0)"
+PR-NG-14,Negative,Payroll Run,Export a run not in Approved/Paid status,High,"409 ""approve it first"""
+PR-NG-15,Negative,Payroll Run,Call process/approve/pay/cancel/export without the matching permission,Critical,403 forbidden on each
+PR-NG-16,Negative,Overtime,Submit a duplicate (tenant,user,date) overtime entry,Medium,409 conflict
+PR-NG-17,Negative,Overtime,Submit hours outside the (0,24] range,Medium,DB CHECK violation (not mirrored in Zod — same unhandled-error risk as PR-NG-04/06)
+PR-NG-18,Negative,Overtime,Manager attempts to approve/reject their own submitted overtime entry,Critical,"403 ""cannot approve or reject your own"""
+PR-NG-19,Negative,Overtime,PATCH an entry that is already reviewed or already claimed by a payroll run,High,400 conflict
+PR-NG-20,Negative,Payroll Run,Attempt GET /payroll/runs holding only payroll.view.all (no process/approve),High,"403 — view.* permissions do not grant run-level access, only payslip access"
+PR-NG-21,Negative,Payroll Settings,POST /settings/bulk for payroll_settings without payroll.settings.manage,High,"403 ""Missing permission to update \""payroll_settings\"""""
+PR-NG-22,Negative,Salary Components,Create a percent_of_component component with no base_component_id,Medium,Not caught by Zod — DB CK_salary_components_base_required is the only floor
+PR-NG-23,Negative,Salary Components,Create a chain of percent_of_component components with a circular reference,High,"400 ""circular or missing base_component_id"" at run-computation time"
+PR-NG-24,Negative,Payslips,Request another user's payslip without team/all scope,High,403 forbidden
+PR-NG-25,Negative,Payslips,Request an unpublished payslip without manage permission,High,"404 ""Payslip not yet available"" (not 403 — deliberately non-revealing)"
+PR-BD-01,Boundary,Payroll Run,period_month at exactly 1 and 12 vs 0 and 13,High,"1 and 12 accepted, 0 and 13 rejected by the manual range check"
+PR-BD-02,Boundary,Payroll Run,period_year at extreme values (e.g. 99999 or -5),Medium,"Confirmed gap: no bounds check exists anywhere (Zod or DB) — such values are accepted"
+PR-BD-03,Boundary,Salary Assignment,ctc_annual at exactly 0 vs a small negative value,Medium,"0 accepted; negative only blocked by DB CHECK (no Zod floor)"
+PR-BD-04,Boundary,Overtime,hours at exactly 24 vs 24.01, and at just above 0 vs exactly 0,Medium,"24 accepted, 24.01 rejected; any value >0 accepted, 0 rejected"
+PR-BD-05,Boundary,LOP Calculation,presentDays+paidLeaveDays exactly equal to workingDays vs one day more,High,"lopDays clamps to 0 in both cases (never negative)"
+PR-BD-06,Boundary,LOP Calculation,presentDays+paidLeaveDays = 0 (fully absent month),Medium,lopDays clamps at workingDays (never exceeds it)
+PR-BD-07,Boundary,Salary Grades,min_amount exactly equal to max_amount,Medium,Accepted (CK allows max_amount >= min_amount)
+PR-VD-01,Validation,payrollComponentSchema,Invalid component_type or calculation_type outside their enums,High,400 enum validation error
+PR-VD-02,Validation,payrollStructureSchema,Missing name field,Medium,400 required-field error
+PR-VD-03,Validation,structureComponentsReplaceSchema,Duplicate component_id within the same items array,Medium,"Not deduped at schema level — surfaces as a raw DB UNIQUE(tenant_id,structure_id,component_id) violation instead of a friendly validation error"
+PR-VD-04,Validation,payrollAssignmentSchema,effective_from submitted as a non-date string (e.g. ""not-a-date""),Medium,"Passes Zod (min-length only) — fails only at the SQL DATE cast, a confirmed validation gap"
+PR-VD-05,Validation,payrollRunCreateSchema,period_year/period_month submitted as non-numeric strings,Medium,Zod coercion behavior should be verified — confirm whether this is rejected or silently coerced
+PR-VD-06,Validation,overtimeEntrySchema,hours submitted as a non-numeric string,Medium,Not mirrored by Zod range checks — DB CHECK is the real floor/ceiling
+PR-VD-07,Validation,overtimeStatusSchema,status outside Approved/Rejected enum,Medium,400 enum validation error
+PR-VD-08,Validation,salaryGradeSchema,No min<=max cross-field refinement exists,High,"Confirmed gap — see PR-NG-04, this is the schema-layer root cause"
+PR-VD-09,Validation,settingsBulkSchema,payroll_settings submitted with wrong types (e.g. ot_rate_multiplier as a string, negative, or omitted),High,"Confirmed gap: z.record(z.string(), z.unknown()) performs zero shape/type/range validation — accepted verbatim"
+PR-VD-10,Validation,Payroll Settings,rounding_rule submitted as an unrecognized string,Medium,"Silently falls through to the default rounding branch — no error, no warning"
+PR-UI-01,UI,SalaryGradesPage,Submit-enable gate only checks code+name are non-empty,Medium,No client-side min<=max check exists — matches the server-side gap
+PR-UI-02,UI,PayrollAssignmentsPage,Submit Add with missing structure_id/ctc_annual/effective_from,Medium,Inline required-field errors block submission (duplicate weaker client copy of server schema)
+PR-UI-03,UI,PayrollAssignmentsPage,Dialog copy on submit,Low,"Explains that submitting closes the prior open assignment and starts a new one, full history kept"
+PR-UI-04,UI,PayrollRunsPage,Create-run dialog month/year selects,Medium,"Client bounds selection to [now-1, now, now+1] years — note the server enforces no such bound"
+PR-UI-05,UI,PayrollRunDetailPage,Process/Approve/Pay/Cancel/Export buttons visibility,High,Each gated client-side by the matching hasPermission check (payroll.process/payroll.approve)
+PR-UI-06,UI,PayrollRunDetailPage,Approve confirmation dialog copy,Medium,"States that computed amounts are frozen once approved"
+PR-UI-07,UI,PayrollOvertimePage,Approver's action list for their own submitted entries,High,Self-submitted entries excluded from the current user's own approve/reject action list
+PR-UI-08,UI,PayslipView,Render a payslip detail,High,No banking fields (account number/IFSC/UPI) are rendered anywhere on this view
+PR-UI-09,UI,PayrollSettingsPage,Fields when lacking payroll.settings.manage,Medium,Fields rendered but disabled — display-only client gate, real enforcement is server-side
+PR-UI-10,UI,PayrollReportsPage / PayrollDashboardPage,Render summary/component-breakdown/trend widgets,Medium,Correct aggregate values rendered per selected period/filters
+PR-AP-01,API,/payroll/components and /payroll/structures,Full CRUD contract check,High,Matches documented schemas and referenced-delete behavior
+PR-AP-02,API,GET/PUT /payroll/structures/:id/components,Contract check,Medium,Full replace-all semantics confirmed
+PR-AP-03,API,GET /payroll/assignments,With and without ?userId= query param,Medium,"With userId returns full history; without returns all currently-open assignments"
+PR-AP-04,API,/payroll/runs full lifecycle,"Create -> process -> approve -> pay, and create -> process -> cancel",Critical,Each transition matches the documented status machine and permission split
+PR-AP-05,API,GET /payroll/runs/:id/lines and /:id/lines/:lineId,Contract check,Medium,Correct line-level and component-snapshot data returned
+PR-AP-06,API,/payroll/overtime CRUD + /:id/status,Contract check,High,Matches documented scope resolution (all/team/own) and self-approval block
+PR-AP-07,API,/payroll/payslips GET/list/detail/publish/viewed,Contract check,High,Matches documented VIEW_PERMS scoping and unpublished-filtering behavior
+PR-AP-08,API,/payroll/reports summary/component-breakdown/trend,Contract check,Medium,Requires payroll.view.all; distinct from the generic reports engine's payroll category
+PR-AP-09,API,GET /settings vs POST /settings/bulk,Contract check for payroll_settings key,High,"GET has no permission gate at all (any authenticated user reads it); POST requires payroll.settings.manage"
+PR-DB-01,Database Validation,salary_grades,Insert min_amount > max_amount directly,High,CK_salary_grades_range CHECK constraint violation
+PR-DB-02,Database Validation,salary_grades,Insert duplicate (tenant_id, code),Medium,UQ_salary_grades_tenant_code violation
+PR-DB-03,Database Validation,employee_salary_assignments,Insert ctc_annual < 0,Medium,CK constraint violation
+PR-DB-04,Database Validation,employee_salary_assignments,Insert effective_to earlier than effective_from,High,CK_employee_salary_assignments_dates violation
+PR-DB-05,Database Validation,employee_salary_assignments,Insert a second open (effective_to IS NULL) row for the same user,High,UX_employee_salary_assignments_user_open filtered unique index violation
+PR-DB-06,Database Validation,payroll_runs,Insert status outside Draft/Processing/Approved/Paid/Cancelled,High,CHECK constraint violation
+PR-DB-07,Database Validation,payroll_runs,Insert period_month outside 1-12,High,CHECK constraint violation (year remains unbounded — confirmed gap, see PR-BD-02)
+PR-DB-08,Database Validation,payroll_runs,Insert duplicate (tenant_id, period_year, period_month),High,UNIQUE constraint violation
+PR-DB-09,Database Validation,payroll_run_lines,Insert line_status outside Pending/Computed/Excluded,Medium,CHECK constraint violation
+PR-DB-10,Database Validation,payroll_run_lines,Insert duplicate (tenant_id, run_id, user_id),High,UNIQUE constraint violation
+PR-DB-11,Database Validation,payroll_run_line_components,Modify a component/structure after its run is Approved/Paid,Critical,"Finalized run's snapshot values remain unchanged — confirms the immutable-snapshot design"
+PR-DB-12,Database Validation,overtime_entries,Insert hours outside (0,24],Medium,CHECK constraint violation
+PR-DB-13,Database Validation,overtime_entries,Insert duplicate (tenant_id, user_id, work_date),Medium,UNIQUE constraint violation
+PR-DB-14,Database Validation,salary_components,Insert percent_of_component type with no base_component_id, or slab type with no config,Medium,CK_salary_components_base_required / CK_salary_components_config_required violations
+PR-DB-15,Database Validation,salary_structure_components,Insert duplicate (tenant_id, structure_id, component_id),Medium,UNIQUE constraint violation
+PR-SC-01,Security,CSV Export,Inspect the exported columns for a payroll run,Critical,"Confirmed finding: bank_account_number, bank_ifsc_code, bank_upi_id exported in full plaintext with no masking anywhere server- or client-side"
+PR-SC-02,Security,Reports engine bypass,"Grant a custom role only reports.payroll.view.all (no payroll.assign/approve/process), attempt the payroll-bank-transfer report",Critical,"Confirmed finding: this permission alone allows full plaintext bank-account export via a separate code path, bypassing the payroll module's own \""export requires payroll.approve\"" design intent"
+PR-SC-03,Security,Module gating enforcement gap,"Direct API call to any /payroll/* endpoint on a tenant whose subscription plan does NOT include payroll",Critical,"Confirmed finding: requireFeatureEnabled('payroll') is defined but never wired to any payroll route — the call succeeds despite the plan disabling the module; only the nav item is hidden client-side"
+PR-SC-04,Security,Overtime self-approval,Attempt to bypass the self-approval block via a different endpoint or bulk action,High,No alternate path allows a user to approve/reject their own overtime entry
+PR-SC-05,Security,Injection,SQL injection payloads in payroll report filters (search/branchId/departmentId/date ranges),Critical,Parameterized queries prevent injection
+PR-SC-06,Security,Component config injection,Submit a malicious/malformed JSON payload in a slab component's config field,High,Safely parsed/validated with no code execution or crash
+PR-SC-07,Security,Concurrency exploitation,Attempt to race two approve/pay requests to double-transition a run,High,Optimistic concurrency check prevents a double state-transition
+PR-SC-08,Security,Immutable snapshot integrity,Attempt to alter payroll_run_line_components data through any non-run-computation code path,Critical,No route or repository function permits post-finalization mutation of a run's line component snapshots
+PR-PF-01,Performance,Payroll Run,Process a run for a large employee count,High,Computation completes within SLA; parallel holiday/attendance/leave/OT fetches scale acceptably
+PR-PF-02,Performance,Payroll Reports,summary/component-breakdown/trend over a large date range,Medium,Query completes within SLA
+PR-PF-03,Performance,CSV Export,Export a run with a large employee count,Medium,Export completes within SLA without blocking the request thread excessively
+PR-PF-04,Performance,Payslips,List payslips for payroll.view.all at large tenant scale,Medium,Response time within SLA
+PR-PF-05,Performance,Salary Assignment history,Query a user's full assignment history after many years of reassignments,Low,Response time within SLA regardless of history depth
+PR-PM-01,Permission Testing,payroll.process vs payroll.approve,Verify create/process/cancel require .process while approve/pay/export/publish require .approve,Critical,Each action blocked without its specific permission — the two are never interchangeable
+PR-PM-02,Permission Testing,payroll.view.own/team/all,Verify these gate payslip visibility only, never payroll-run access,High,"A payroll.view.all holder still cannot call GET /payroll/runs directly"
+PR-PM-03,Permission Testing,payroll.assign,Verify required for both GET and POST on /payroll/assignments,High,Blocked without this permission on either direction
+PR-PM-04,Permission Testing,salary-grades.manage,Verify this is a distinct permission code from the payroll.* namespace,Medium,Confirmed — grades use their own permission, not payroll.structures.manage or similar
+PR-PM-05,Permission Testing,payroll.components.manage vs payroll.structures.manage,Verify separation and shared GET access,Medium,"GET /components accepts either permission; write operations require the specific one"
+PR-PM-06,Permission Testing,payroll.overtime.apply vs payroll.overtime.approve,Verify separation and self-approval block,Critical,A holder of only .apply cannot approve entries; self-approval blocked even with .approve
+PR-PM-07,Permission Testing,payroll.settings.view/manage vs actual GET /settings gate,Verify GET /settings has no permission check at all,High,"Confirmed inconsistency: any authenticated user can read payroll_settings verbatim regardless of holding payroll.settings.view"
+PR-PM-08,Permission Testing,reports.payroll.view.own/team/all,Verify this is a fully separate permission namespace from payroll.*,Critical,"Confirmed — a role can hold this without any payroll.* permission and still access payroll-scoped reports including bank-transfer data (see PR-SC-02)"
+PR-PM-09,Permission Testing,payroll.view.all insufficiency for run access,Confirm a role holding only payroll.view.all cannot list or view individual payroll runs,High,403 on GET /payroll/runs and GET /payroll/runs/:id

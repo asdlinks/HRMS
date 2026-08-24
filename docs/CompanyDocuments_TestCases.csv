@@ -1,0 +1,89 @@
+Test ID,Category,Feature,Scenario,Priority,Expected Result
+CD-FN-01,Functional,Document Upload,Manager uploads a new document with title/category/dates/visibility/file,High,"Document created with version 1, share rows inserted per visibility, all in one transaction"
+CD-FN-02,Functional,Document List,Employee views the document list,High,"Only active, effective (effective_date<=today, not expired), and shared-with-them documents returned"
+CD-FN-03,Functional,Document List,Manager views the document list with status/category/search filters,High,"All documents returned regardless of status/date, correctly filtered by the given query params"
+CD-FN-04,Functional,Document Detail,GET /:id as a manager,Medium,Response includes the shares array in addition to document metadata
+CD-FN-05,Functional,Document Detail,GET /:id as an employee for a visible document,Medium,Document returned without a shares array
+CD-FN-06,Functional,Document Update,PATCH /:id updates metadata,High,"Title/category/description/dates updated; all share rows replaced per the new visibility payload"
+CD-FN-07,Functional,Versioning,POST /:id/versions uploads a new file version,High,"version_number = MAX+1 inserted; current_version_id repointed to the new version"
+CD-FN-08,Functional,Versioning,GET /:id/versions lists all versions,Medium,"All versions returned, newest first, manage-only"
+CD-FN-09,Functional,Archive/Restore,PATCH /:id/archive then /:id/restore,Medium,"status transitions active -> archived -> active correctly"
+CD-FN-10,Functional,Deletion,DELETE /:id,High,"Shares, versions, and the document row all removed transactionally; on-disk files unlinked (best-effort)"
+CD-FN-11,Functional,Download,GET /:id/download for the current version,High,"File streamed with Content-Disposition: attachment and the original display filename"
+CD-FN-12,Functional,Download,GET /:id/download?versionId= as a manager,High,Specific historical version streamed correctly
+CD-FN-13,Functional,Preview,GET /:id/preview for a previewable MIME type,Medium,"Inline preview served with correct Content-Type and Content-Disposition: inline"
+CD-FN-14,Functional,Visibility,Document shared with share_type='all',High,Visible to every employee in the tenant
+CD-FN-15,Functional,Visibility,Document shared with share_type='role'/'department'/'branch',High,Visible only to matching users
+CD-FN-16,Functional,Notifications,Upload a new document,Medium,"""New document published: {title}"" notification fired to all resolved recipients per the visibility rows"
+CD-FN-17,Functional,Notifications,Upload a new version,Medium,"""Document updated: {title}"" notification fired to all resolved recipients"
+CD-FN-18,Functional,Visibility Picker,GET /lookups/roles,Low,"Returns the tenant's role list for the visibility picker, manage-only"
+CD-FN-19,Functional,Provisioning Regression,Provision a new tenant post-migration-040,High,"hr and super_admin roles automatically receive company-documents.view/.manage — confirms the seed-drift fix holds for new tenants"
+CD-NG-01,Negative,Upload,Upload a file with an unsupported extension,High,"400 ""File type \""<ext>\"" is not allowed"""
+CD-NG-02,Negative,Upload,Upload a file exceeding 20MB,High,"400 ""File exceeds the 20MB size limit"""
+CD-NG-03,Negative,Upload,POST / with no file attached (bypassing the client-side check),Medium,Server-side error since a version row requires a file — verify a clean 400 rather than an unhandled crash
+CD-NG-04,Negative,Permission Guards,"Call PATCH/POST versions/DELETE/archive/restore/lookups-roles without company-documents.manage",Critical,403 forbidden on each
+CD-NG-05,Negative,Versioned Download,Employee (no manage permission) requests GET /:id/download?versionId= for a document otherwise visible to them,High,403 — versionId-qualified download/preview always requires company-documents.manage
+CD-NG-06,Negative,Visibility Enforcement,Employee requests a document not shared with them,High,404 (not 403) — deliberately indistinguishable from a nonexistent document
+CD-NG-07,Negative,Visibility Enforcement,Request a nonexistent document id,High,"404, identical response body to CD-NG-06 (""so a guessed document id doesn't leak whether it exists"")"
+CD-NG-08,Negative,Tenant Isolation,Guess/increment a document id belonging to another tenant,Critical,404
+CD-NG-09,Negative,Upload,Submit a malformed JSON string in the visibility multipart field,Medium,"400 ""visibility must be valid JSON"""
+CD-NG-10,Negative,Upload,Submit a category value outside the fixed 11-value enum,High,400 enum validation error (matches the DB CHECK constraint)
+CD-NG-11,Negative,Visibility,"Submit visibility as {} (no allEmployees, no role/department/location ids)",High,"Confirmed gap: accepted — document is created with zero share rows, making it invisible to every non-manager with no warning"
+CD-NG-12,Negative,Upload,Submit expiry_date earlier than effective_date,Medium,"Confirmed gap: accepted with no cross-field validation anywhere (schema or DB)"
+CD-NG-13,Negative,Upload,Submit effective_date as a non-date string (e.g. ""abc""),Medium,"Confirmed gap: passes Zod's min-length-only check; fails only at the SQL Date-binding layer, likely as an unhandled error rather than a clean 400"
+CD-NG-14,Negative,Preview,Request /:id/preview for a document whose MIME type is outside PREVIEWABLE_MIME_TYPES,Medium,415 rejected
+CD-NG-15,Negative,Visibility Picker,GET /lookups/roles without company-documents.manage,Medium,403 forbidden
+CD-BD-01,Boundary,Upload,File size at exactly 20MB vs 20MB + 1 byte,High,"20MB accepted, one byte over rejected"
+CD-BD-02,Boundary,Category,Category string with different casing than the exact enum values,Medium,Rejected — enum match is exact-string, not case-insensitive
+CD-BD-03,Boundary,Employee Visibility,effective_date exactly today vs tomorrow,High,"Today's document becomes visible to employees; tomorrow's remains invisible until its date arrives"
+CD-BD-04,Boundary,Employee Visibility,expiry_date exactly today vs yesterday,High,"Today's expiry still visible (expiry_date >= today); yesterday's is now invisible to employees"
+CD-BD-05,Boundary,Versioning,Upload many sequential versions (e.g. 50+) to the same document,Low,"No version-count ceiling exists — all versions persist and remain individually downloadable by managers"
+CD-BD-06,Boundary,Title,Title at exactly 255 characters vs 256,Medium,"255 accepted, 256 rejected by schema"
+CD-VD-01,Validation,companyDocumentMetadataSchema,Missing title,High,400 required-field error
+CD-VD-02,Validation,companyDocumentMetadataSchema,Title exceeding 255 characters,Medium,400 length validation error
+CD-VD-03,Validation,companyDocumentMetadataSchema,Missing or invalid category,High,400 enum/required validation error
+CD-VD-04,Validation,documentVisibilitySchema,roleIds/departmentIds/locationIds submitted as non-array values,Medium,400 validation error
+CD-VD-05,Validation,companyDocumentMetadataSchema,expiry_date submitted as a non-date, non-empty string,Medium,"Confirmed gap: passes validation — no format check exists (mirrors CD-NG-13 for effective_date)"
+CD-VD-06,Validation,companyDocumentMetadataSchema,description submitted with an extremely long value,Low,"Accepted — NVARCHAR(MAX) column, no max-length validation anywhere"
+CD-UI-01,UI,CompanyDocumentsPage,Render for a manager vs an employee,High,"AdminDocumentsView (full CRUD) rendered for company-documents.manage holders; EmployeeDocumentsView (read-only) for everyone else"
+CD-UI-02,UI,DocumentFormDialog,Submit with empty title/category/effective date,Medium,Blocked by native HTML5 required-field validation
+CD-UI-03,UI,DocumentFormDialog,Submit a new document with no file selected,Medium,"Blocked client-side with ""Please select a file to upload"""
+CD-UI-04,UI,DocumentFormDialog,File input accept attribute bypass via drag-drop or ""All files"" toggle,High,"Confirmed gap: the accept=\"...\" attribute is purely cosmetic and trivially bypassed — real enforcement is server-side only (fileFilter)"
+CD-UI-05,UI,DocumentFormDialog,Select an oversized file before submitting,Medium,"Confirmed gap: no client-side size pre-check exists — the 20MB limit is only enforced after the multipart upload completes server-side"
+CD-UI-06,UI,AdminDocumentsView,Click Delete,Medium,"Confirm dialog warns this permanently removes the document and every version, cannot be undone"
+CD-UI-07,UI,AdminDocumentsView,Toggle Archive/Restore,Low,Status icon/label updates correctly after each action
+CD-UI-08,UI,VersionHistoryDialog,Click a per-version download button,Medium,Downloads that specific historical version via the versionId-qualified endpoint
+CD-UI-09,UI,EmployeeDocumentsView,Apply the category filter,Low,Filters the already-fetched list client-side without a new API call
+CD-UI-10,UI,documentUtils.isPreviewableMime,Compare against the server's PREVIEWABLE_MIME_TYPES set,Low,"Confirmed manual-sync risk: no shared constant exists between client and server — a future server-side addition/removal could silently drift from the client's copy"
+CD-AP-01,API,GET /company-documents,Contract check for manager vs employee branches,High,"Different response shapes/filtering depending on hasManage(req)"
+CD-AP-02,API,POST /company-documents,Multipart contract check incl. parseMultipartMetadata JSON-parsing of the visibility field,High,Correctly parses and validates before the transactional insert
+CD-AP-03,API,PATCH /company-documents/:id,JSON contract check,Medium,Metadata-only update confirmed
+CD-AP-04,API,POST /company-documents/:id/versions,Multipart contract check,High,New version row created and current_version_id updated
+CD-AP-05,API,GET /company-documents/:id/versions,Contract check,Medium,Descending version order confirmed
+CD-AP-06,API,DELETE /company-documents/:id,Contract check,High,"Cascading delete confirmed; file unlink is fire-and-forget (errors swallowed)"
+CD-AP-07,API,GET /:id/download and /:id/preview,Header contract check,Medium,Correct Content-Disposition/Content-Type per endpoint and MIME type
+CD-DB-01,Database Validation,company_documents.status,Insert a value outside active/archived,High,CK_company_documents_status CHECK constraint violation
+CD-DB-02,Database Validation,company_documents.category,Insert a value outside the 11 fixed categories,High,"CK_company_documents_category CHECK constraint violation, confirming DB/Zod enum parity"
+CD-DB-03,Database Validation,company_document_shares.share_type,Insert a value outside all/role/department/branch,Medium,CK_company_document_shares_type CHECK constraint violation
+CD-DB-04,Database Validation,company_document_versions,Insert a duplicate (document_id, version_number),Medium,UQ_company_document_versions_doc_version UNIQUE constraint violation
+CD-DB-05,Database Validation,company_document_shares,Insert a share row with an invalid role_id/department_id/location_id,Medium,FK constraint violation
+CD-DB-06,Database Validation,current_version_id,Verify it always points to the latest version after multiple uploads,High,FK value matches the highest version_number row for that document
+CD-DB-07,Database Validation,notifications.link,Verify document notifications populate the link column for deep-linking,Low,link column populated with a reference to the relevant document (if implemented) rather than left NULL
+CD-DB-08,Database Validation,role_permissions backfill,"On a pre-existing tenant, confirm company-documents.view/.manage grants exist for hr/super_admin post-migration-040",Medium,Rows present — regression check for the seed-drift bug
+CD-SC-01,Security,Path Traversal,Upload a file with a crafted original filename (e.g. ../../etc/passwd-style),Critical,"Neutralized — on-disk filename is always crypto.randomUUID() + extension; original_file_name is stored only as a DB display value, never used in any filesystem path"
+CD-SC-02,Security,Direct File Access,Attempt to fetch an uploaded file directly from the filesystem path without going through the authenticated routes,Critical,"Unreachable — no express.static mount exists over UPLOAD_ROOT; the only access paths are the authenticated /download and /preview handlers"
+CD-SC-03,Security,Information Leak Avoidance,Compare the exact response body for ""wrong tenant/nonexistent id"" vs ""exists but not shared with me"",High,Identical 404 responses in both cases — no distinguishing signal
+CD-SC-04,Security,Extension Spoofing,Rename a disallowed file type's extension to an allowed one (e.g. rename a script to .pdf) and upload it,High,"Confirmed gap: only the extension is checked (fileFilter), never actual file content/magic bytes — a mislabeled file passes validation"
+CD-SC-05,Security,Dead Permission,Confirm company-documents.view has zero functional effect anywhere in the codebase,Medium,"A role holding .manage but not .view, and a role holding neither, both get identical employee-view access — no code path checks .view at all"
+CD-SC-06,Security,Storage Limit Non-Enforcement,Upload documents well past a tenant's subscription plan's storage_limit_mb,Critical,"Confirmed gap: uploads keep succeeding indefinitely — storage_limit_mb is display-only on the Platform Admin dashboard, never enforced at upload time"
+CD-SC-07,Security,Silent Delete Failure,Delete a document when the uploads directory is read-only/inaccessible,Medium,"Confirmed gap: fs.unlink errors are swallowed (() => {}) — the DB delete still succeeds and returns 200, but the orphaned file is never flagged to the caller or in logs"
+CD-SC-08,Security,Injection,SQL injection payloads in search/category/title fields,Critical,Parameterized queries prevent injection
+CD-PF-01,Performance,GET / (employee view),Large tenant with many documents/shares,Medium,listVisibleToUser query completes within SLA
+CD-PF-02,Performance,GET / (admin view),Large document count with combined status/category/search filters,Medium,listForAdmin query completes within SLA
+CD-PF-03,Performance,Download/Preview,High-volume concurrent downloads re-checking authorization on every call,Medium,No measurable degradation from the lack of authorization caching on these endpoints
+CD-PF-04,Performance,Version History,GET /:id/versions for a document with 100+ versions,Low,Listing completes within SLA regardless of version count
+CD-PM-01,Permission Testing,company-documents.manage,Verify required for every mutating endpoint (upload/edit/version/archive/restore/delete) and for /lookups/roles,Critical,All blocked without this permission
+CD-PM-02,Permission Testing,company-documents.view,Confirm this seeded permission has zero enforcement effect anywhere,High,"Duplicate of CD-SC-05 from a permission-boundary lens — flag as a dead/vestigial permission code"
+CD-PM-03,Permission Testing,Unguarded base routes,"Confirm GET /, GET /:id, /:id/download, /:id/preview have no permission middleware at all",High,Any authenticated tenant user can reach these; access is controlled entirely by the internal hasManage/isVisibleToUser branching, not by a route guard
+CD-PM-04,Permission Testing,versionId-qualified access,Confirm passing ?versionId= always requires company-documents.manage regardless of the document's normal visibility to the caller,High,403 for any non-manage holder attempting a specific historical version
+CD-PM-05,Permission Testing,Provisioning regression,Confirm every newly provisioned tenant automatically grants company-documents.view/.manage to hr/super_admin,Medium,"Regression test for the migration-035-vs-tenantProvisioning.service.js seed-drift bug fixed in migration 040"

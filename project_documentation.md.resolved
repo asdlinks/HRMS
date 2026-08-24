@@ -1,0 +1,109 @@
+# Leave Management Tool - Architecture & Documentation
+
+This document covers the complete end-to-end architecture, packages used, API routes, and page-by-page mapping to the underlying database schemas and queries.
+
+## 1. Tech Stack & Packages
+
+### Frontend (Client)
+- **Framework**: React 19 + Vite (`vite`, `@vitejs/plugin-react`)
+- **Routing**: `react-router-dom` v7
+- **Styling / Icons**: `lucide-react` (SVG icons)
+- **Data Fetching**: `axios`
+- **Charting**: `recharts` for dashboard analytics.
+
+### Backend (Server)
+- **Runtime**: Node.js
+- **Framework**: Express (`express`)
+- **Database**: SQLite3 (`sqlite3`) natively interacting via `sqlite3.Database` driver.
+- **Middleware**: 
+  - `cors` (Cross-Origin Resource Sharing)
+  - `body-parser` (Parsing JSON bodies)
+- **Dev Tools**: `nodemon` for auto-restarts
+
+---
+
+## 2. API Routes & Database Queries
+
+The server exposes an API via Express on `http://localhost:5000/api`.
+
+### Authentication
+- `POST /api/login`: Validates user credentials.
+  - **DB Query**: `SELECT * FROM users WHERE email = ? AND password = ?`
+
+### Leaves
+- `GET /api/leaves`: Fetches all leaves. Supports filtering by `userId` (for an employee view) or fetching all (for a manager view).
+  - **DB Query**: `SELECT leaves.*, users.name as user_name FROM leaves JOIN users ON leaves.user_id = users.id [WHERE user_id = ?]`
+- `POST /api/leaves`: Applies for a new leave. Evaluates user role. If the applier is an employee, it triggers notification inserts to all managers.
+  - **DB Queries**:
+    - Validate role: `SELECT role, name FROM users WHERE id = ?`
+    - Create record: `INSERT INTO leaves (user_id, type, start_date, end_date, reason, status) VALUES (...)`
+    - Notify managers (if employee applied):
+      - `SELECT id FROM users WHERE role = 'manager'`
+      - `INSERT INTO notifications (user_id, message, type) VALUES (...)`
+- `PATCH /api/leaves/:id`: Modifies a leave (approvals, rejections, cancellations).
+  - **DB Queries**:
+    - Get submitter details: `SELECT users.role, users.name FROM leaves JOIN users... WHERE leaves.id = ?`
+    - Update record: `UPDATE leaves SET status = ?, cancellation_reason = ? WHERE id = ?`
+    - Create status update notification for user: `INSERT INTO notifications ...`
+
+### Holidays
+- `GET /api/holidays`: Retrieves list of public holidays.
+  - **DB Query**: `SELECT * FROM holidays ORDER BY date ASC`
+- `POST /api/holidays`: Adds a new holiday (Admin/Manager capability).
+  - **DB Query**: `INSERT INTO holidays (name, date) VALUES (?, ?)`
+
+### Employees / Departments
+- `GET /api/users`: Fetches the directory of users, optionally filtered by `departmentId`.
+  - **DB Query**: `SELECT users.*, departments.name as department_name FROM users LEFT JOIN departments ON users.department_id = departments.id [WHERE department_id = ?]`
+- `GET /api/departments`: Enumerates departments for filters or dropdowns.
+  - **DB Query**: `SELECT * FROM departments`
+
+### Notifications
+- `GET /api/notifications/:userId`: Polls the latest 20 notifications for the logged-in user.
+  - **DB Query**: `SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 20`
+- `POST /api/notifications/read/:userId`: Marks all notifications for a given user as read.
+  - **DB Query**: `UPDATE notifications SET is_read = 1 WHERE user_id = ?`
+
+---
+
+## 3. Page-wise Navigation & Interaction Flow
+
+The frontend calls APIs using the `axios` instance configured in [client/src/api/index.js](file:///C:/Users/vishnupriya/GitHub/Antigravity-workaround/Leave-Management-Tool/client/src/api/index.js). Here is how each major page consumes those APIs:
+
+#### **Login Page ([Login.jsx](file:///C:/Users/vishnupriya/GitHub/Antigravity-workaround/Leave-Management-Tool/client/src/pages/Login.jsx))**
+- Users input credentials.
+- Calls [login(email, password)](file:///C:/Users/vishnupriya/GitHub/Antigravity-workaround/Leave-Management-Tool/client/src/api/index.js#9-10) → `POST /api/login`.
+- If successful, saves user info locally and routes to either `EmployeeDashboard` or `ManagerDashboard` depending on the `role` returned by the Database.
+
+#### **Employee Dashboard ([EmployeeDashboard.jsx](file:///C:/Users/vishnupriya/GitHub/Antigravity-workaround/Leave-Management-Tool/client/src/pages/EmployeeDashboard.jsx))**
+- On initial load:
+  - Fetches the employee's leaves: [getLeaves(userId, 'employee')](file:///C:/Users/vishnupriya/GitHub/Antigravity-workaround/Leave-Management-Tool/client/src/api/index.js#10-11)
+  - Fetches holidays to show upcoming: [getHolidays()](file:///C:/Users/vishnupriya/GitHub/Antigravity-workaround/Leave-Management-Tool/client/src/api/index.js#13-14)
+  - Fetches any alerts: [getNotifications(userId)](file:///C:/Users/vishnupriya/GitHub/Antigravity-workaround/Leave-Management-Tool/client/src/api/index.js#17-18)
+- Uses `recharts` to render a summary of leaves taken vs. remaining balance.
+
+#### **Manager Dashboard ([ManagerDashboard.jsx](file:///C:/Users/vishnupriya/GitHub/Antigravity-workaround/Leave-Management-Tool/client/src/pages/ManagerDashboard.jsx))**
+- On initial load:
+  - Fetches *all* employees' leaves: [getLeaves(userId, 'manager')](file:///C:/Users/vishnupriya/GitHub/Antigravity-workaround/Leave-Management-Tool/client/src/api/index.js#10-11)
+- Presents a queue of `Pending` requests.
+- The manager can click 'Approve' or 'Reject', which triggers [updateLeaveStatus(leaveId, { status })](file:///C:/Users/vishnupriya/GitHub/Antigravity-workaround/Leave-Management-Tool/client/src/api/index.js#12-13) → `PATCH /api/leaves/:id`.
+- The database updates the leave status and fires a notification back to the employee's ID.
+
+#### **Leaves Application ([LeavesPage.jsx](file:///C:/Users/vishnupriya/GitHub/Antigravity-workaround/Leave-Management-Tool/client/src/pages/LeavesPage.jsx))**
+- Form prompting for `type`, `start_date`, `end_date`, and `reason`.
+- Upon submission, it triggers [applyLeave(data)](file:///C:/Users/vishnupriya/GitHub/Antigravity-workaround/Leave-Management-Tool/client/src/api/index.js#11-12) → `POST /api/leaves`.
+- The system defaults it to `Pending` (unless applied by a manager directly) and creates a `notifications` record targeted at users where `role='manager'`.
+
+#### **Leave Cancellation ([LeaveCancellationPage.jsx](file:///C:/Users/vishnupriya/GitHub/Antigravity-workaround/Leave-Management-Tool/client/src/pages/LeaveCancellationPage.jsx))**
+- Lists active or approved leaves for an employee.
+- Clicking cancel triggers [updateLeaveStatus(id, { status: 'Cancellation Pending', cancellation_reason: '...' })](file:///C:/Users/vishnupriya/GitHub/Antigravity-workaround/Leave-Management-Tool/client/src/api/index.js#12-13).
+- Database converts status to `Cancellation Pending`, triggering a notification entry targeted to managers to review the cancellation.
+
+#### **Employees Directory ([EmployeesPage.jsx](file:///C:/Users/vishnupriya/GitHub/Antigravity-workaround/Leave-Management-Tool/client/src/pages/EmployeesPage.jsx))**
+- Lists all staff members in the company.
+- Calls [getUsers()](file:///C:/Users/vishnupriya/GitHub/Antigravity-workaround/Leave-Management-Tool/client/src/api/index.js#16-17) and maps them to a table or card list.
+- May allow filtering by invoking [getDepartments()](file:///C:/Users/vishnupriya/GitHub/Antigravity-workaround/Leave-Management-Tool/client/src/api/index.js#15-16).
+
+#### **Holiday Calendar ([HolidayCalendarPage.jsx](file:///C:/Users/vishnupriya/GitHub/Antigravity-workaround/Leave-Management-Tool/client/src/pages/HolidayCalendarPage.jsx))**
+- Calls [getHolidays()](file:///C:/Users/vishnupriya/GitHub/Antigravity-workaround/Leave-Management-Tool/client/src/api/index.js#13-14) → returns the sorted List of holidays.
+- If logged in as Manager, includes a form to execute [addHoliday(data)](file:///C:/Users/vishnupriya/GitHub/Antigravity-workaround/Leave-Management-Tool/client/src/api/index.js#14-15).

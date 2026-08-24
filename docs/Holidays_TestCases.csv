@@ -1,0 +1,46 @@
+Test ID,Category,Feature,Scenario,Priority,Expected Result
+HL-FN-01,Functional,Create,Create a company-wide holiday (no location_id),High,"Row inserted with location_id=NULL, applies to every location"
+HL-FN-02,Functional,Create,Create a holiday scoped to a single location,High,Row inserted with that location_id
+HL-FN-03,Functional,Create,Create a holiday via location_ids array spanning multiple locations,High,"One row inserted per location id, sharing the same name+date, response {success:true, count}"
+HL-FN-04,Functional,List,GET /holidays?locationId=X,High,"Returns company-wide (NULL) rows plus rows matching location X only"
+HL-FN-05,Functional,List,GET /holidays with no locationId,Medium,"All rows for the tenant across every location returned unfiltered (intentional for admin/Settings use)"
+HL-FN-06,Functional,Delete,Delete a single holiday row,High,Row removed
+HL-FN-07,Functional,Delete,Delete a multi-location holiday from the UI,Medium,"Grouped by name+date in the UI, one DELETE call fired per underlying location_id row"
+HL-FN-08,Functional,Flexi Holiday,Create a holiday via POST /flexi-holidays,Medium,Row inserted into the separate flexi_holidays table via the same shared router factory
+HL-FN-09,Functional,Employee UI,HolidayCalendarPage displays holidays grouped by month,Medium,Defaults to the viewer's own location (user.location_id)
+HL-FN-10,Functional,Admin UI,SettingsPage Holiday Config — multi-location checkboxes, All Locations, Regular/Flexi toggle, year filter,Medium,All controls function and post to the correct endpoint/table
+HL-FN-11,Functional,Dashboard Widget,HolidayTimelineCard shows the next 5 upcoming holidays,Low,"Deduped by name-date key, scoped to the viewer's own location"
+HL-FN-12,Functional,Payroll Integration,Verify countWorkingDays excludes company-wide plus the employee's own location holidays,High,"Confirmed correct — payrollCalculation.service.js filters holidays.location_id === null || === assignment.location_id per employee"
+HL-NG-01,Negative,Create,POST / without holidays.manage,High,403 forbidden
+HL-NG-02,Negative,Delete,DELETE /:id without holidays.manage,High,403 forbidden
+HL-NG-03,Negative,List,GET / without holidays.view or holidays.manage,High,403 forbidden
+HL-NG-04,Negative,Create,Submit a location_id that doesn't exist for the tenant,High,"Confirmed gap: no app-layer existence check — surfaces as an FK-violation 500, not a clean 400"
+HL-NG-05,Negative,Create,Submit a malformed date string (e.g. ""not-a-date""),High,"Confirmed gap: passes Zod's min(1)-only check; fails only at the SQL Date-binding layer"
+HL-NG-06,Negative,Create,Submit the exact same holiday (name+date+location) twice,Critical,"Confirmed critical gap: succeeds both times — no unique constraint or app-layer duplicate check exists at all"
+HL-NG-07,Negative,Delete,Attempt to delete a locations row still referenced by a holiday,Medium,FK-violation 500 rather than a clean conflict error (if a location-delete flow exists)
+HL-BD-01,Boundary,Create,name field at the DB's NVARCHAR(255) limit vs one char over,Low,"255 accepted; 256 only fails at the DB layer since the schema doesn't mirror the column width"
+HL-BD-02,Boundary,Employee UI,Viewer with location_id=NULL opens HolidayCalendarPage,High,"Confirmed over-inclusive display bug: locationId filter becomes undefined, so the viewer sees every location's holidays, not just company-wide ones"
+HL-VD-01,Validation,holidayCreateSchema,Missing name or date,High,400 required-field error
+HL-VD-02,Validation,holidayCreateSchema,date submitted as a non-date string,High,"Confirmed gap — duplicate framing of HL-NG-05 at the schema-layer level"
+HL-VD-03,Validation,holidayCreateSchema,location_ids submitted as a non-array value,Medium,400 validation error
+HL-UI-01,UI,HolidayCalendarPage,Add button and location filter visibility,Medium,Rendered only for holidays.manage holders
+HL-UI-02,UI,HolidayCalendarPage,Add form location selection,Low,"Single-select dropdown only — no multi-select, no Flexi Holiday option on this page"
+HL-UI-03,UI,SettingsPage Holiday Config,Multi-location checkboxes + All Locations checkbox,Medium,"Checking All Locations clears location_ids to [], correctly mapped to a company-wide row server-side"
+HL-UI-04,UI,SettingsPage Holiday Config,Regular/Flexi toggle,Medium,Correctly routes the same form to /holidays or /flexi-holidays
+HL-UI-05,UI,SettingsPage Holiday Config,Year filter,Low,"Client-side only — fetches ALL holidays every time and filters in JS, no server-side year param exists"
+HL-UI-06,UI,HolidayTimelineCard,Multiple location rows sharing the same name+date,Low,Deduped correctly by the name-date key before display
+HL-UI-07,UI,Delete confirmation,Deleting a multi-location holiday,Low,"Dialog explicitly warns it removes the holiday for every location it was scheduled against"
+HL-UI-08,UI,Both admin surfaces,Confirm neither HolidayCalendarPage nor SettingsPage exposes an Edit action,Medium,"Only Add and Delete exist anywhere — a mistake requires delete + re-add"
+HL-AP-01,API,GET /holidays and /flexi-holidays,Contract check for the shared router factory,Medium,Both endpoints behave identically except for the target table
+HL-AP-02,API,POST /holidays,Multi-row insert contract via location_ids,Medium,"Response {success:true, count} matches the number of location rows inserted"
+HL-AP-03,API,DELETE /holidays/:id,Contract check,Medium,Scoped correctly by tenant_id + id
+HL-DB-01,Database Validation,holidays / flexi_holidays,Confirm identical schema/constraints between the two tables,Low,Byte-for-byte identical structure confirmed
+HL-DB-02,Database Validation,holidays,Insert a duplicate (tenant_id, name, date, location_id) row directly,Critical,"Confirmed gap: no UNIQUE constraint exists — duplicate rows insert successfully"
+HL-DB-03,Database Validation,FK_holidays_location,Verify ON DELETE behavior when a referenced location is deleted,Medium,"No ON DELETE action specified (defaults to NO ACTION) — deleting a referenced location fails with an FK-violation error rather than cascading or nulling"
+HL-SC-01,Security,"Leave Apply Cross-Location Bug (CRITICAL)","Employee at Location A applies for leave with start/end date equal to a holiday scoped ONLY to Location B",Critical,"Confirmed bug: isHolidayOrWeekend's underlying listBetween query has no location_id filter at all — the leave is incorrectly rejected for EVERY employee tenant-wide, not just Location B's employees"
+HL-SC-02,Security,Leave Apply Cross-Location Bug — No-Location Employee,Employee with no location_id assigned applies for leave on a date that is a Location-B-only holiday,Critical,"Confirmed bug: incorrectly rejected — the same over-broad, unscoped check applies regardless of the applicant's own location"
+HL-SC-03,Security,Correct Counter-Example,Employee actually assigned to the holiday's own location applies leave on that date,Medium,"Correctly rejected — the bug is over-broad (blocks too many people), not under-broad, so the intended case still works"
+HL-SC-04,Security,Injection,SQL injection payloads in the name field,Critical,Parameterized queries prevent injection
+HL-PF-01,Performance,GET /holidays,No locationId filter across a tenant with many locations and years of holiday history,Medium,Query completes within SLA despite returning the full unfiltered set
+HL-PM-01,Permission Testing,holidays.view vs holidays.manage,Verify read-only access works with either while write requires .manage specifically,High,GET succeeds with either permission; POST/DELETE require holidays.manage
+HL-PM-02,Permission Testing,Flexi Holidays permission reuse,Confirm flexi_holidays CRUD shares the same holidays.view/.manage codes rather than a separate flexi-holidays.manage,Medium,Confirmed — no distinct permission exists for the Flexi table

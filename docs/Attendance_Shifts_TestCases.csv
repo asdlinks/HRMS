@@ -1,0 +1,137 @@
+Test ID,Category,Feature,Scenario,Priority,Expected Result
+AT-FN-01,Functional,Check-in,Employee check-in via Manual method (office),High,"200, attendance row created with status Present/Late per shift grace period, checkInTime = server time"
+AT-FN-02,Functional,Check-in,Employee check-in via WFH work mode with location shared,High,"200, work_mode='WFH' stored, location_lat/lng saved if geofence configured"
+AT-FN-03,Functional,Check-in,Employee check-in via ClientVisit with clientName,High,"200, client_name persisted, notes optional"
+AT-FN-04,Functional,Check-in,Employee check-in via FieldWork,Medium,"200, work_mode='FieldWork' stored"
+AT-FN-05,Functional,Break,Start a break mid-shift,High,"200, attendance_breaks row created with break_start"
+AT-FN-06,Functional,Break,Resume from an open break,High,"200, break_end set on the open attendance_breaks row"
+AT-FN-07,Functional,Check-out,Check-out with workSummary text,High,"200, check_out_time set, worked_minutes/overtime_minutes/is_early_exit computed"
+AT-FN-08,Functional,Status,GET /today-status for self,Medium,"Returns whether caller already has a row today, break list, onBreak flag"
+AT-FN-09,Functional,Policy,GET /my-policy when a policy is assigned,Medium,Returns policy + parsed allowed_methods array
+AT-FN-10,Functional,Policy,GET /my-policy when unassigned,Medium,"Returns {policy: null, allowedMethods: ['Manual']}"
+AT-FN-11,Functional,Monthly view,Self views own monthly attendance,High,"Returns {attendance, leaves, holidays} for the month"
+AT-FN-12,Functional,Monthly view,Manager/HR with attendance.view.team views a team member's monthly attendance,High,"200, data returned for target user"
+AT-FN-13,Functional,Today view,GET /today (tenant-wide today attendance),Medium,All attendance rows for today across the tenant returned
+AT-FN-14,Functional,Attendance Policies,"Create, edit, delete a policy; assign to user; clear assignment with policyId=null",High,"CRUD succeeds; PUT /assign/:userId with null clears users.attendance_policy_id"
+AT-FN-15,Functional,Work Modes,CRUD work modes and assign a default work mode to an employee,Medium,"CRUD succeeds; PUT /assign/:userId sets users.default_work_mode_id"
+AT-FN-16,Functional,Shifts,Create/edit/delete shifts of each shift_type (General/Flexible/Night/Rotational/Split),High,CRUD succeeds with type-specific fields persisted correctly
+AT-FN-17,Functional,Shifts,Assign a shift to an employee,High,"New open assignment created, prior open assignment auto-closed (effective_to = new effective_from - 1 day)"
+AT-FN-18,Functional,Shifts,View assignment history for a user,Medium,Chronological list of past + current assignments returned
+AT-FN-19,Functional,Face Attendance,Enroll a face embedding for a user (kiosk),High,"200, embedding + modelVersion stored"
+AT-FN-20,Functional,Face Attendance,Kiosk face check-in with confidence >= MIN_FACE_CONFIDENCE,High,"200, attendance row created via same attendanceEngine.recordCheckIn path with method='Face'"
+AT-FN-21,Functional,Kiosk Devices,Create/list/rotate-key/set status of kiosk devices,Medium,CRUD + key rotation + Active/Revoked status transitions succeed
+AT-FN-22,Functional,Kiosk Devices,View/update kiosk app config,Low,Kiosk app URL config updated
+AT-FN-23,Functional,Overtime,Checkout triggers overtime entry when ot_enabled and overtime_minutes > 0,High,"overtime_entries row auto-created, status Pending if ot_requires_approval else Approved"
+AT-FN-24,Functional,Attendance Rules,Update org-wide attendance_rules setting (weekly_off_days/nth_saturdays_off/required_for_roles),Medium,Setting persisted and reflected across dashboards/AppShell popup
+AT-FN-25,Functional,Reports,Generate each attendance report (daily/monthly/summary/late-arrival/early-exit/missing-checkin/missing-checkout/wfh/hybrid/field-visit/face-recognition/shift/overtime/trend) with valid filters,Medium,Correct filtered rows/columns returned per report definition
+AT-NG-01,Negative,Check-in,Check-in with a method not in the assigned policy's allowed_methods,High,"403 ""Your attendance policy does not permit the ${method} method."""
+AT-NG-02,Negative,Check-in,Check-in with a non-Manual method when no policy is assigned,High,"403 ""No attendance policy is assigned to you yet — contact HR."""
+AT-NG-03,Negative,Check-in,Check-in with date before effectiveStartDate,High,"400 ""Attendance check-in is not available for this period."""
+AT-NG-04,Negative,Check-in,Check-in with date equal to the user's own joining/tracking-start day,Medium,"400 ""You can start check-in from the system by tomorrow, make sure to login everyday."""
+AT-NG-05,Negative,Check-in,Geofenced policy - check-in with no lat/lng sent,High,"400 ""Location is required for this attendance method."""
+AT-NG-06,Negative,Check-in,Geofenced policy - check-in from outside the configured radius,High,"400 ""You are outside the allowed location range for this attendance method."""
+AT-NG-07,Negative,Check-in,Second check-in attempt same day,High,"400 ""Already checked in for today"" (DB unique-violation caught)"
+AT-NG-08,Negative,Check-out,Check-out with no existing today row,High,"400 ""You have not checked in today yet."""
+AT-NG-09,Negative,Break,Start break when a break is already in progress,Medium,"400 ""A break is already in progress."""
+AT-NG-10,Negative,Break,Resume when no break is in progress,Medium,"400 ""No break is currently in progress."""
+AT-NG-11,Negative,Monthly view,View another user's monthly attendance without attendance.view.team,High,403 forbidden
+AT-NG-12,Negative,Shifts,Create shift with a name already used in the tenant,High,409 duplicate-name conflict (UQ_shifts_tenant_name)
+AT-NG-13,Negative,Shifts,Delete a shift referenced by an employee_shift_assignments row,High,409 conflict (isShiftReferenced)
+AT-NG-14,Negative,Work Modes,Delete a work mode referenced as a user's default or on an attendance row,High,409 conflict (isWorkModeReferenced)
+AT-NG-15,Negative,Attendance Policies,Assign a nonexistent policyId to a user,Medium,404/400 error
+AT-NG-16,Negative,Face Attendance,Kiosk face check-in with confidence below MIN_FACE_CONFIDENCE (0.45),High,422 rejected regardless of kiosk-side threshold
+AT-NG-17,Negative,Face Attendance,Call a requireDevice()-guarded endpoint with a human (employee) token,High,401/403 rejected — device-only endpoint
+AT-NG-18,Negative,Face Attendance,Call a requireHuman()-guarded endpoint with a kiosk device token,High,401/403 rejected — human-only endpoint
+AT-NG-19,Negative,Work Mode Select,Submit workMode='Office' via /work-mode/select,Medium,Rejected by schema enum — Office is kiosk-only, not selectable via self-service
+AT-NG-20,Negative,Work Mode Select,Submit ClientVisit without clientName,Medium,Validation error — clientName required for ClientVisit
+AT-NG-21,Negative,Shifts,Create employee_shift_assignments with effective_to earlier than effective_from,High,DB CHECK constraint CK_esa_dates violation
+AT-NG-22,Negative,Shifts,Concurrently create two open assignments for the same user,High,Filtered unique index UX_employee_shift_assignments_user_open violation on the second insert
+AT-BD-01,Boundary,Late calculation,Check-in exactly at grace_period_minutes boundary vs one minute over,High,"At boundary status='Present'; one minute over → status='Late' with lateMinutes set"
+AT-BD-02,Boundary,Geofence,Check-in at exactly geofence_radius_meters distance vs one meter beyond,High,"At/within radius allowed; beyond radius rejected with location-range error"
+AT-BD-03,Boundary,Face confidence,Confidence exactly at 0.45 vs 0.449,High,"0.45 accepted, 0.449 rejected with 422"
+AT-BD-04,Boundary,Checkout gap,Check-out same day vs check-out submitted >24h after check-in,High,"Same-day computes overtime normally; multi-day gap caps workedMinutes display at 24h and zeroes overtime entirely"
+AT-BD-05,Boundary,Overtime,workedMinutes exactly at expected_work_minutes + ot_trigger_after_minutes vs one minute over,Medium,"At boundary overtimeMinutes=0; one minute over triggers overtime_entries creation"
+AT-BD-06,Boundary,Early exit,Checkout exactly at early_exit_threshold_minutes before scheduled end vs one minute earlier,Medium,"At boundary is_early_exit=false; one minute earlier sets is_early_exit=true"
+AT-BD-07,Boundary,Tracking window,date equal to trackingStart (joining day) vs day after,High,"Joining day blocked with specific message; day after allowed"
+AT-BD-08,Boundary,Split shift,Check-in/out relative to first window start and last window end,Medium,"Lateness/early-exit computed against first window's start and last window's end only; intermediate windows not separately enforced"
+AT-BD-09,Boundary,Idempotency,Replay an idempotencyKey immediately vs after the original response is stored,Medium,"Immediate replay before response stored safely re-runs (protected by unique constraint); replay after stored returns cached response"
+AT-BD-10,Boundary,Reports,attendance-trend date range at exactly 62 days vs 63 days,Low,"62 days uses daily buckets; 63+ switches to monthly buckets"
+AT-VD-01,Validation,checkInSchema,Missing or malformed date field,High,400 field validation error
+AT-VD-02,Validation,workModeSelectSchema,Invalid workMode value outside WFH/ClientVisit/FieldWork enum,High,400 enum validation error
+AT-VD-03,Validation,attendanceBreakActionSchema,Missing date field,Medium,400 required-field error
+AT-VD-04,Validation,attendanceCheckOutSchema,Malformed idempotencyKey format,Low,400 validation error
+AT-VD-05,Validation,Shift creation,Missing required shift_type,High,400 required-field error
+AT-VD-06,Validation,Shift creation,Invalid shift_type outside General/Flexible/Night/Rotational/Split,High,400 enum validation error (also enforced by CK_shifts_type at DB level)
+AT-VD-07,Validation,Shift creation,Invalid break_type outside none/unpaid_duration/paid_duration/fixed_window,Medium,400 enum validation error
+AT-VD-08,Validation,Shift assignment,Missing/invalid effective_from date,Medium,400 validation error
+AT-VD-09,Validation,Attendance Policy,allowed_methods containing a value outside ATTENDANCE_METHODS enum,High,400 validation error
+AT-VD-10,Validation,Attendance Policy,Invalid policy_type outside OfficeOnly/Hybrid/Remote/FieldStaff,Medium,400 enum validation error (also CK_attendance_policies_type at DB level)
+AT-VD-11,Validation,Work Mode assign,Missing workModeId in body,Medium,400 required-field error
+AT-VD-12,Validation,Face enroll,Malformed or wrong-length embedding array,Medium,400 validation error
+AT-UI-01,UI,TodayAttendanceCard,Click Check-In while a request is already in flight,Medium,Button disabled during busy state — prevents double submit
+AT-UI-02,UI,Work-mode dialog,ClientVisit selected with clientName left blank,High,Check-In button disabled until clientName is non-blank (trimmed)
+AT-UI-03,UI,Geolocation,Toggle "Share my current location" and deny browser permission,Medium,"Resolves to null silently (8s timeout), does not block check-in unless policy geofence requires it server-side"
+AT-UI-04,UI,AttendanceTimeline,Render a day with check-in, break, resume, and check-out events,Medium,All four events rendered in correct chronological order
+AT-UI-05,UI,AttendancePage calendar,Verify color coding for Present/Leave/Half-Day/Absent/Holiday/Off-Day,High,"Each day correctly classified per client-side derivation rules"
+AT-UI-06,UI,AttendancePage,Employee-picker dropdown visibility,Medium,Visible only to users holding attendance.view.team; hidden otherwise
+AT-UI-07,UI,ShiftsPage,Select Split shift_type,Medium,Dynamic time-window rows appear; Night-only "overnight" checkbox hidden
+AT-UI-08,UI,ShiftsPage,Select Night shift_type,Medium,"""End time is on the next calendar day"" checkbox shown only for Night"
+AT-UI-09,UI,ShiftsPage,Attempt Save with empty shift name,Medium,Save button disabled until name is non-empty
+AT-UI-10,UI,ShiftsPage,Attempt to delete a shift in use,Medium,"Confirm dialog states ""Shifts assigned to an employee cannot be deleted"""
+AT-UI-11,UI,WorkModesPage,Render compact variant embedded inside Settings,Low,Compact CRUD list renders correctly within SettingsPage
+AT-UI-12,UI,AttendancePoliciesPage,Bulk-assign dialog with employee name filter,Medium,Checkbox multi-select filters correctly by typed name
+AT-UI-13,UI,SettingsPage,"""Attendance Required For"" role checkboxes",Medium,"Helper text and role list correctly reflect required_for_roles setting; unchecking a role updates all three enforcement surfaces"
+AT-UI-14,UI,AppShell popup,Missed check-in popup appears/dismiss/click-through,High,"Popup shown app-wide (except /attendance, /login) when eligible and not checked in; dismiss via X or auto-dismiss on click-through to /attendance"
+AT-UI-15,UI,ManagerDashboard,TodaysAttendanceBar segments for eligible vs opted-out roles,Medium,"Present/On Leave/Not Checked In segments scoped only to attendance-eligible roles; opted-out roles excluded from denominator"
+AT-AP-01,API,POST /attendance/check-in,Contract check,High,"200 with created attendance record; requires attendance.checkin permission"
+AT-AP-02,API,POST /attendance/work-mode/select,Contract check,High,"200 with work-mode check-in recorded"
+AT-AP-03,API,POST /attendance/break and /resume,Contract check,Medium,Correct break lifecycle state transitions
+AT-AP-04,API,POST /attendance/check-out,Contract check with workSummary,High,"200 with computed worked_minutes/overtime_minutes/is_early_exit"
+AT-AP-05,API,GET /attendance/monthly,Ownership enforcement for cross-user requests,High,"403 unless requester === target or requester has attendance.view.team"
+AT-AP-06,API,GET /attendance/today-status,Contract check,Medium,Correct today/break/onBreak shape returned
+AT-AP-07,API,GET /attendance/my-policy,Contract check incl. unassigned fallback,Medium,"Correct shape in both assigned and unassigned cases"
+AT-AP-08,API,/attendance-policies CRUD + assign,Contract check,High,All CRUD + PUT /assign/:userId endpoints behave per schema and permission guard
+AT-AP-09,API,/work-modes CRUD + assign + GET /,Contract check,High,"GET / accessible with no permission required; CRUD/assign require work-modes.manage"
+AT-AP-10,API,/shifts CRUD + /assignments,GET /assignments without userId query param,Medium,400 error when userId missing
+AT-AP-11,API,/face-attendance enroll/sync/check-in,Verify requireDevice() vs requireHuman() split,High,Each endpoint enforces its documented principal type strictly
+AT-AP-12,API,/kiosk-devices CRUD + config + status,Contract check,Medium,All endpoints require attendance.device.manage
+AT-AP-13,API,Attendance reports endpoints,Contract check per report id with filters,Medium,Each report returns correct filtered columns per its registry definition
+AT-DB-01,Database Validation,attendance,Insert duplicate (tenant_id,user_id,date) row directly,High,UQ_attendance_tenant_user_date UNIQUE violation
+AT-DB-02,Database Validation,attendance.method,Insert value outside the CK_attendance_method enum,High,CHECK constraint violation
+AT-DB-03,Database Validation,shifts.shift_type,Insert value outside the CK_shifts_type enum,High,CHECK constraint violation
+AT-DB-04,Database Validation,shifts.break_type,Insert value outside the CK_shifts_break_type enum,Medium,CHECK constraint violation
+AT-DB-05,Database Validation,employee_shift_assignments,Insert effective_to earlier than effective_from,High,CK_esa_dates CHECK constraint violation
+AT-DB-06,Database Validation,employee_shift_assignments,Insert a second open (effective_to IS NULL) row for the same user,High,UX_employee_shift_assignments_user_open filtered unique index violation
+AT-DB-07,Database Validation,attendance_policies.policy_type,Insert value outside the CK_attendance_policies_type enum,Medium,CHECK constraint violation
+AT-DB-08,Database Validation,Unique per-tenant names,"Insert duplicate work_modes.code, shifts.name, or attendance_policies.name within a tenant",Medium,Respective UNIQUE constraint violation
+AT-DB-09,Database Validation,idempotency_keys,Insert duplicate (tenant_id, idempotency_key),Medium,UQ_idempotency_keys_tenant_key violation
+AT-DB-10,Database Validation,overtime_entries,Insert duplicate (tenant_id, user_id, work_date),High,UNIQUE constraint violation — auto-created OT swallows the violation, leaving the manual entry as source of truth
+AT-DB-11,Database Validation,attendance_breaks,Delete parent attendance row with child breaks,Medium,Cascade delete removes associated attendance_breaks rows
+AT-DB-12,Database Validation,attendance FKs,Insert attendance row with invalid shift_id/work_mode_id/device_id,Medium,FK constraint violation
+AT-DB-13,Database Validation,attendance.location_lat/lng,Insert value exceeding DECIMAL(9,6) precision,Low,Truncation/rejection per column precision — verify no silent data corruption
+AT-SC-01,Security,Tenant isolation,Attempt to fetch/modify another tenant's attendance/shift/policy data,Critical,Blocked entirely — all queries scoped by tenant_id
+AT-SC-02,Security,Kiosk vs human tokens,Present a kiosk device token to a requireHuman() route and vice versa,Critical,Both rejected — principal types are mutually exclusive
+AT-SC-03,Security,Kiosk-only permissions,Attempt to grant attendance.checkin.kiosk or attendance.face.sync via role_permissions/role management UI,High,Not assignable — these are minted only into kiosk device JWTs, never via normal role grants
+AT-SC-04,Security,Face data privacy,Inspect what is persisted from a face check-in,Critical,Only the 128-d embedding vector and confidence float are stored server-side; raw camera frame never leaves the kiosk
+AT-SC-05,Security,Data exposure,Check API responses for location_lat/lng exposure to unauthorized roles,Medium,Location data not leaked to roles without attendance.view.team or equivalent
+AT-SC-06,Security,Kiosk config secrecy,Verify kiosk app config URL is excluded from the general /api/settings payload,Medium,Employees without attendance.device.manage never see the kiosk config URL
+AT-SC-07,Security,Injection,SQL injection payloads in report filters (search, branchId, departmentId),Critical,Parameterized queries prevent injection
+AT-SC-08,Security,Idempotency,Rapid concurrent replay of the same idempotencyKey (claim race),High,Only one attendance row created; race is safely handled by the underlying unique constraint
+AT-SC-09,Security,Overtime integrity,Attempt to overwrite a manual overtime_entries row via a duplicate auto-created entry,Medium,Auto-creation silently fails on unique violation; manual entry remains authoritative
+AT-PF-01,Performance,GET /attendance/today,Tenant-wide today attendance under large employee count,Medium,Response time within SLA; no full-table scan degradation
+AT-PF-02,Performance,attendance-trend report,Large date range (e.g. 1 year) bucket computation,Medium,Query completes within SLA for both daily and monthly bucket modes
+AT-PF-03,Performance,Monthly attendance,Query performance for an employee with multi-year history,Low,Response time within SLA
+AT-PF-04,Performance,Kiosk offline queue,High volume of queued check-ins flushed on reconnect,Medium,All queued check-ins delivered in insertion order without loss; non-retryable 4xx dropped after logging
+AT-PF-05,Performance,Concurrent check-ins,Many kiosk devices check-in simultaneously at shift start,High,No deadlock/contention on the UQ_attendance_tenant_user_date constraint under concurrent inserts
+AT-PF-06,Performance,attendance-summary report,Large employee count and date range,Medium,Aggregation query completes within SLA
+AT-PM-01,Permission Testing,attendance.checkin,Verify required on check-in/break/resume/checkout endpoints,Critical,All four blocked without this permission
+AT-PM-02,Permission Testing,attendance.view.team,Verify required to view another user's monthly attendance,High,Blocked without this permission; no separate attendance.view.all exists
+AT-PM-03,Permission Testing,attendance.policy.manage,Verify required for all attendance-policy CRUD/assign endpoints,High,Blocked without this permission
+AT-PM-04,Permission Testing,work-modes.manage vs GET /work-modes,Verify CRUD/assign requires the permission while GET / requires none,Medium,GET / accessible to any authenticated user; CRUD/assign blocked without work-modes.manage
+AT-PM-05,Permission Testing,shifts.view vs shifts.manage,Verify view-only access vs manage (create/edit/delete/assign) access,High,shifts.view allows GET only; mutating actions require shifts.manage
+AT-PM-06,Permission Testing,attendance.face.enroll + requireHuman(),Verify enrollment endpoints reject device tokens even if permission were granted,High,requireHuman() blocks kiosk device tokens regardless of permission claims
+AT-PM-07,Permission Testing,attendance.face.sync + requireDevice(),Verify sync endpoint rejects human tokens even with the permission,High,requireDevice() blocks human tokens regardless of permission claims
+AT-PM-08,Permission Testing,attendance.device.manage,Verify required for all kiosk-devices endpoints,High,Blocked without this permission
+AT-PM-09,Permission Testing,attendance.settings.view / attendance.settings.manage,Verify view vs edit separation for attendance_rules settings,Medium,View-only role can read but not update; manage role can update
+AT-PM-10,Permission Testing,reports.attendance.view.own/team/all,Verify scope correctness per role grant,High,"Own-scoped user sees only self rows; team-scoped sees direct reports; all-scoped sees tenant-wide"
+AT-PM-11,Permission Testing,Opted-out role (not in required_for_roles),Verify such a role still retains attendance.checkin capability,Medium,"Check-in action still available; only reminder/nag surfaces and dashboard KPIs are suppressed, per explicit design"

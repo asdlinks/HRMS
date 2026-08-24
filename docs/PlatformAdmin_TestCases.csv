@@ -1,0 +1,154 @@
+Test ID,Category,Feature,Scenario,Priority,Expected Result
+PA-FN-01,Functional,Auth,Login with valid platform admin credentials,High,"200, access token returned, httpOnly refresh cookie mywe_platform_admin_refresh_token set on /api/platform-admin/auth path"
+PA-FN-02,Functional,Auth,Call /auth/refresh with valid cookie,High,"200, old refresh token revoked, new access + refresh token issued (rotation)"
+PA-FN-03,Functional,Auth,Logout,Medium,"200 {success:true}, refresh token revoked, cookie cleared"
+PA-FN-04,Functional,Auth,Change password with correct current password,High,"200, password updated, all existing refresh tokens for that admin revoked"
+PA-FN-05,Functional,Companies,"List companies (default page 1, pageSize 20)",High,"Paginated list with plan, employee/active-user counts, last login, org admin name"
+PA-FN-06,Functional,Companies,Search + status filter combined,Medium,Filtered/paginated result matches query params
+PA-FN-07,Functional,Companies,Get company by valid :id,High,"200, full company profile"
+PA-FN-08,Functional,Companies,Provision new company (valid full payload),High,"Tenant, roles/permissions, nav menu, plan-gated modules, admin user, and admin-role link all created in one transaction; response {tenantId, adminUserId, adminEmail, generatedPassword}"
+PA-FN-09,Functional,Companies,Update company profile (name/address/currency/date format/FY/theme),Medium,"200, fields persisted"
+PA-FN-10,Functional,Companies,Activate a trial/suspended company,High,status='active'
+PA-FN-11,Functional,Companies,Suspend an active company,High,"status='suspended', tenant's users blocked at next login (via requireActiveTenant)"
+PA-FN-12,Functional,Companies,"Arbitrary status transition via /status (trial→active→cancelled)",Medium,Status updated to requested enum value
+PA-FN-13,Functional,Companies,Reset admin password for company with linked admin,High,"New one-time password generated, bcrypt-hashed, all refresh tokens for that HR user revoked, {adminEmail, newPassword} returned once"
+PA-FN-14,Functional,Companies,Assign subscription plan to company,High,"Plan assigned, applyPlanModules re-toggles is_feature_enabled on gateable menu items live"
+PA-FN-15,Functional,Companies,View tenant health checklist,Medium,Onboarding checklist booleans + completion % returned
+PA-FN-16,Functional,Companies,View usage summary,Medium,"Employee/user counts, storage bytes, last payroll/attendance sync, storageLimitMb returned"
+PA-FN-17,Functional,Companies,View provisioning history,Medium,"List of past attempts with parsed steps JSON, no plaintext password ever present"
+PA-FN-18,Functional,Dashboard,Load platform KPIs,High,"8 aggregate fields (total/active/trial/suspended companies, new this month, employees, active users) returned, no row-level HR data"
+PA-FN-19,Functional,System Health,Load system health,Medium,"DB latency, API uptime, storage bytes, active tenant count, honest not_configured background-jobs status"
+PA-FN-20,Functional,Subscription Plans,List all plans / active-only via ?activeOnly=true,Medium,Correct filtered list
+PA-FN-21,Functional,Subscription Plans,Create new plan,High,"201/200, plan persisted with enabled_modules JSON"
+PA-FN-22,Functional,Subscription Plans,Update existing plan,Medium,Fields updated
+PA-FN-23,Functional,Employee Limit,Add employee under Enterprise plan (max_employees = null),Medium,"Check skipped entirely, employee created regardless of count"
+PA-NG-01,Negative,Auth,Login with unknown email,High,"401 ""Invalid email or password"""
+PA-NG-02,Negative,Auth,"Login with correct email, wrong password",High,"401 ""Invalid email or password"", failed-attempt counter incremented"
+PA-NG-03,Negative,Auth,Login as an admin with is_active=false,High,"401 ""Invalid email or password"" (indistinguishable from bad password — no enumeration leak)"
+PA-NG-04,Negative,Auth,Login while locked_until is in the future,High,"429 ""Too many failed login attempts. Please try again in a few minutes."""
+PA-NG-05,Negative,Auth,/auth/refresh with no cookie,High,"401 ""Not authenticated"""
+PA-NG-06,Negative,Auth,/auth/refresh with unknown/expired token,High,"401 ""Session expired, please log in again"""
+PA-NG-07,Negative,Auth,/auth/refresh replay of an already-revoked token,Critical,"Detected as theft: all refresh tokens for that admin revoked, cookie cleared, 401 ""Session invalidated, please log in again"""
+PA-NG-08,Negative,Auth,Change password with wrong current password,High,"400 ""Current password is incorrect"""
+PA-NG-09,Negative,Companies,Get/Update/Activate a nonexistent :id,High,"404 ""Company not found"""
+PA-NG-10,Negative,Companies,Provision company with slug that already exists,High,"409 ""A company with this code (slug) already exists"""
+PA-NG-11,Negative,Companies,Provision/assign with missing or is_active=false subscription plan,High,"400 ""Select a valid, active subscription plan"""
+PA-NG-12,Negative,Companies,Reset admin password when primary_admin_user_id is null,Medium,"404 ""This company has no linked administrator to reset"""
+PA-NG-13,Negative,Subscription Plans,Create plan with duplicate name,High,"409 ""A subscription plan with this name already exists"""
+PA-NG-14,Negative,Subscription Plans,Get nonexistent plan :id,Medium,"404 ""Subscription plan not found"""
+PA-NG-15,Negative,Employee Limit,Create employee when currentCount >= max_employees,High,"403 ""Employee limit reached for your subscription plan (X/Y). Upgrade your plan to add more employees."""
+PA-NG-16,Negative,Module Gating,Tenant user requests a module not in plan's enabled_modules,High,"403 ""This feature is not enabled for your organization"""
+PA-NG-17,Negative,Auth,Hit any /api/platform-admin/* route with no Authorization header,High,"401 ""Authentication required"""
+PA-NG-18,Negative,Auth,Hit /api/platform-admin/* with a valid tenant JWT,Critical,"401 ""Invalid or expired token"" (signature fails — wrong secret)"
+PA-NG-19,Negative,Auth,Hit tenant /api/* with a valid platform-admin JWT,Critical,"401 ""Invalid or expired token"""
+PA-NG-20,Negative,Subscription Plans,Attempt DELETE on a subscription plan,Medium,"No delete endpoint exists — 404/405; plans can only be soft-disabled via is_active"
+PA-BD-01,Boundary,Rate Limiter,Exactly 10 vs 11th login attempt from same IP within 15 min,High,"10th allowed through to auth logic, 11th blocked with rate-limit 429"
+PA-BD-02,Boundary,Lockout,4th vs 5th consecutive failed login,High,"5th attempt sets locked_until = now+15min; 4th does not lock the account"
+PA-BD-03,Boundary,Lockout,Login attempt exactly at locked_until expiry boundary,Medium,"Attempt after expiry proceeds to normal credential check, not blocked"
+PA-BD-04,Boundary,Tokens,Access token used at exactly 15-minute TTL boundary,Medium,"Token valid up to expiry, rejected immediately after"
+PA-BD-05,Boundary,Tokens,Refresh token used at exactly 7-day TTL boundary,Medium,"Valid up to expiry, ""Session expired"" after"
+PA-BD-06,Boundary,Validation,Slug of exactly 50 chars vs 51 chars,Medium,"50 chars accepted ({1,49} after first char = 50 total max), 51 rejected"
+PA-BD-07,Boundary,Validation,Company name at 255 vs 256 chars,Medium,"255 accepted, 256 rejected by schema"
+PA-BD-08,Boundary,Validation,Plan name at 100 vs 101 chars,Medium,"100 accepted, 101 rejected"
+PA-BD-09,Boundary,Employee Limit,Employee count exactly equal to max_employees vs one below,Critical,"Equal-to blocks creation (>= check), one-below allows it"
+PA-BD-10,Boundary,Pagination,"page=0, page beyond last page, very large pageSize",Medium,"Graceful empty/clamped result, no server error"
+PA-BD-11,Boundary,Validation,New password at exactly 8 chars vs 7 chars,Medium,"8 accepted, 7 rejected by platformAdminChangePasswordSchema"
+PA-BD-12,Boundary,Usage UI,Storage usage at 89% vs 90% vs 91% of storageLimitMb,Low,"""Approaching limit"" chip appears only at >=90% threshold"
+PA-VD-01,Validation,Login schema,Missing email or password,High,400 with field-level validation error
+PA-VD-02,Validation,Login schema,Malformed email (notanemail),Medium,400 validation error
+PA-VD-03,Validation,Create company,Slug with uppercase letters,High,"Rejected: ""Lowercase letters, numbers and hyphens only"""
+PA-VD-04,Validation,Create company,Slug starting with a hyphen,Medium,"Rejected by regex ^[a-z0-9][a-z0-9-]{1,49}$"
+PA-VD-05,Validation,Create company,Missing name/phone/adminName/adminEmail/subscription_plan_id,High,400 per-field required errors
+PA-VD-06,Validation,Create company,Invalid adminEmail format,High,400 email validation error
+PA-VD-07,Validation,Create company,Invalid roleTemplate (not simple/enterprise),Medium,400 enum validation error
+PA-VD-08,Validation,Create company,Invalid status at creation (only trial/active allowed),Medium,400 enum validation error
+PA-VD-09,Validation,Status update,Invalid value on /status (outside trial/active/suspended/cancelled),Medium,400 enum validation error
+PA-VD-10,Validation,Subscription assign,Missing subscription_plan_id in body,Medium,400 required-field error
+PA-VD-11,Validation,Subscription plan,Negative max_employees/storage_limit_mb/trial_days,Medium,400 — must be positive int or null
+PA-VD-12,Validation,Subscription plan,enabled_modules containing a non-gateable/invalid module code,Medium,400 — must be within GATEABLE_MODULES enum
+PA-VD-13,Validation,Company update,Invalid currency/date-format value,Low,400 validation error
+PA-VD-14,Validation,Change password,newPassword below 8 chars,Medium,400 validation error
+PA-UI-01,UI,Login page,Invalid email format typed,Medium,"Inline ""Enter a valid email address"" (client-side zod)"
+PA-UI-02,UI,Login page,Empty password submitted,Medium,"Inline ""Password is required"""
+PA-UI-03,UI,Login page,Server 401/429 response,High,Message surfaced in top-level Alert component
+PA-UI-04,UI,Company list,Type in search box,Medium,"Debounced (300ms) request fires, list updates"
+PA-UI-05,UI,Company list,"Cycle through status filter (all/trial/active/suspended/cancelled)",Medium,List filters correctly per selection
+PA-UI-06,UI,Company create,Submit with empty required fields,High,Inline validation errors block submission
+PA-UI-07,UI,Company create,Submit with no subscription plan selected,High,"Snackbar ""Select a subscription plan"", submission blocked"
+PA-UI-08,UI,Company create,Successful provisioning,High,"One-time credentials panel shown with ""Copy Credentials"" button and warning ""cannot be retrieved again"""
+PA-UI-09,UI,Company detail,Click Suspend,High,"Confirm dialog, destructive styling, warns ""Every user at this company will be immediately unable to log in"""
+PA-UI-10,UI,Company detail,Click Reset Admin Password,High,"Confirm dialog warns ""every existing session for this administrator will be signed out"""
+PA-UI-11,UI,Company detail,Navigate Profile/Health/Usage/History tabs,Medium,"Correct content renders per tab, no cross-tab data leakage"
+PA-UI-12,UI,Company detail,Employee usage >=90% of plan limit,Low,"""Approaching limit"" chip displayed"
+PA-UI-13,UI,Provisioning History,Inspect any historical entry,Critical,"No plaintext password ever rendered, even for failed attempts"
+PA-UI-14,UI,Protected routes,Navigate to any /platform-admin/* route unauthenticated,High,Redirect to /platform-admin/login
+PA-UI-15,UI,Session handling,Access token expires mid-session and refresh also fails,Medium,"Auto sign-out via onSessionExpired, redirected to login"
+PA-UI-16,UI,Platform Settings,Create/edit subscription plan dialog,Medium,"Fields (name, max employees, storage, support level, trial days, prices marked ""(future)"", module checkboxes, active switch) all editable; no delete option present"
+PA-AP-01,API,POST /auth/login,Contract check,High,"200 body shape {accessToken, admin}; refresh cookie set with correct path/flags"
+PA-AP-02,API,POST /auth/refresh,Contract check,High,"New access token in body, rotated cookie"
+PA-AP-03,API,POST /auth/logout,Called with and without cookie,Medium,"Always 200 {success:true}, idempotent"
+PA-AP-04,API,POST /auth/change-password,Called without Authorization header,High,401 (route self-applies authenticatePlatformAdmin)
+PA-AP-05,API,GET /companies,"Verify default page=1, pageSize=20 when omitted",Medium,Matches documented defaults
+PA-AP-06,API,GET /companies/:id,Nonexistent numeric and non-numeric id,Medium,"404 for both; no 500 on malformed id"
+PA-AP-07,API,POST /companies,Full contract check on success,High,"Response exactly {tenantId, adminUserId, adminEmail, generatedPassword}"
+PA-AP-08,API,PUT /companies/:id,Partial payload (single field),Medium,"Only supplied field updated, others untouched"
+PA-AP-09,API,POST /companies/:id/activate  /suspend,Call twice in a row,Low,"Idempotent, no error on repeated identical state"
+PA-AP-10,API,POST /companies/:id/status,Set to current status (no-op transition),Low,"200, no side effects"
+PA-AP-11,API,POST /companies/:id/reset-admin-password,Contract check,High,"Response {adminEmail, newPassword}, never re-retrievable afterward"
+PA-AP-12,API,PUT /companies/:id/subscription,Contract + side-effect check,High,200 and menu_items.is_feature_enabled updated for gateable modules
+PA-AP-13,API,GET /companies/:id/health,Contract check,Medium,Checklist object + numeric completion %
+PA-AP-14,API,GET /companies/:id/usage,Contract check,Medium,All 7 documented metrics + storageLimitMb present
+PA-AP-15,API,GET /companies/:id/provisioning-history,Contract check,Medium,"steps returned as parsed JSON array, not raw string"
+PA-AP-16,API,GET /dashboard,Contract check,High,"Exactly the 8 documented KPI fields, correct types"
+PA-AP-17,API,GET /system-health,Contract check,Medium,backgroundJobs.status === 'not_configured' reflected honestly (no fake data)
+PA-AP-18,API,/subscription-plans CRUD,Full GET/POST/PUT contract,High,Matches subscriptionPlanSchema field set on all responses
+PA-AP-19,API,/subscription-plans,Verify no DELETE method registered,Medium,"404/405, confirming design intent (soft-disable only)"
+PA-AP-20,API,Cookie handling,Cross-origin request with withCredentials,Medium,Cookie sent/received correctly per CORS config
+PA-DB-01,Database Validation,tenants.slug,Insert duplicate slug directly,High,UNIQUE constraint UQ_tenants_slug violation (SQL error 2627/2601)
+PA-DB-02,Database Validation,tenants.status,Insert/update to invalid status value,High,CHECK constraint rejects value outside trial/active/suspended/cancelled
+PA-DB-03,Database Validation,platform_admins.email,Insert duplicate email,High,UNIQUE constraint UQ_platform_admins_email violation
+PA-DB-04,Database Validation,platform_admin_refresh_tokens,Delete a platform_admins row with active tokens,Medium,ON DELETE CASCADE removes associated refresh tokens
+PA-DB-05,Database Validation,provisioning_logs.status,Insert value outside success/failed,Medium,CHECK constraint violation
+PA-DB-06,Database Validation,provisioning_logs.tenant_id,Log entry for a provisioning failure before tenant row exists,Medium,"tenant_id nullable, row still written correctly"
+PA-DB-07,Database Validation,tenants.primary_admin_user_id,Point to a nonexistent user id,Medium,FK constraint violation
+PA-DB-08,Database Validation,subscription_plans.name,Insert duplicate name directly,Medium,UNIQUE constraint violation
+PA-DB-09,Database Validation,subscription_plans.enabled_modules,Inspect stored value,Low,"Valid JSON array of module codes, defaults to []"
+PA-DB-10,Database Validation,Transaction integrity,Force a mid-provisioning failure (e.g. bad role template),Critical,Entire transaction rolls back — no orphaned tenant/roles/menu/user rows remain
+PA-DB-11,Database Validation,Provisioning logging,Failed provisioning attempt,High,provisioning_logs row still written (outside the tx) with status='failed' and error_message
+PA-DB-12,Database Validation,Refresh token storage,Inspect token_hash column,Critical,Contains SHA-256 hash only — raw refresh token never persisted server-side
+PA-DB-13,Database Validation,Password storage,Inspect platform_admins.password and users.password,Critical,"bcrypt hash only, never plaintext"
+PA-DB-14,Database Validation,tenants.subscription_plan_id,Verify existing tenants post-migration 044,Medium,"All pre-existing tenants backfilled to ""Professional"" plan"
+PA-DB-15,Database Validation,menu_items.is_feature_enabled,After plan reassignment,High,"Only the 5 gateable top-level items (payroll, reports, recruitment, performance, assets) toggle; others untouched"
+PA-SC-01,Security,JWT isolation,"Sign a token with jwtAccessSecret (tenant secret), present to platform-admin route",Critical,"401 ""Invalid or expired token"" — signature verification fails"
+PA-SC-02,Security,JWT isolation,Craft token with correct secret but missing/wrong type claim,Critical,401 rejected at explicit type === 'platform_admin' check
+PA-SC-03,Security,Refresh theft detection,Reuse a previously-revoked refresh token,Critical,"All sessions for that admin revoked, cookie cleared, 401"
+PA-SC-04,Security,Cookie flags,Inspect refresh cookie attributes,High,"httpOnly, secure (in prod), scoped path=/api/platform-admin/auth, appropriate sameSite"
+PA-SC-05,Security,Password hashing,Verify bcrypt cost factor,Medium,Cost factor 10 confirmed on all password hashes
+PA-SC-06,Security,Account enumeration,Compare 401 responses: unknown email / wrong password / inactive account,High,"All three return identical ""Invalid email or password"" — no distinguishing signal"
+PA-SC-07,Security,Brute force,Combined IP rate limit (10/15min) + account lockout (5/15min),High,Both layers independently trigger as designed; verify they don't bypass each other
+PA-SC-08,Security,Injection,"SQL injection payloads in login email/password, company name, slug fields",Critical,"Parameterized queries prevent injection; input safely rejected or escaped"
+PA-SC-09,Security,XSS,<script> payload in company name / adminName,High,"Sanitized/escaped on render in Company List/Detail pages, no execution"
+PA-SC-10,Security,One-time secrets,Attempt to re-fetch generated admin password or reset password via any GET endpoint,Critical,"Never retrievable again anywhere, including provisioning history"
+PA-SC-11,Security,Session invalidation,Old refresh token used after a password change,High,Rejected — change-password revokes all refresh tokens
+PA-SC-12,Security,Session invalidation,Existing tenant-user session used after platform admin resets their password,High,Rejected — reset revokes all of that user's refresh tokens
+PA-SC-13,Security,Principal isolation,"Platform-admin token against tenant /api/*, and vice versa",Critical,"Both fail with 401 — mutually exclusive by signature, not just app logic"
+PA-SC-14,Security,Token storage,Inspect client-side storage (localStorage/sessionStorage) for access token,Medium,"Not present — held only in a module-level JS variable, reducing XSS exfiltration risk"
+PA-SC-15,Security,CSRF,Cross-site POST to /auth/refresh relying on ambient cookie,High,Blocked/mitigated by sameSite cookie attribute
+PA-SC-16,Security,Mass assignment,"Inject extra fields (is_active, id, primary_admin_user_id) into create/update payloads",High,Ignored/stripped by schema validation — no privilege escalation via extra fields
+PA-SC-17,Security,IDOR,Platform admin iterates sequential :id values across tenants,Low,"Expected/by-design for platform admin; confirm no such access is possible for non-platform-admin callers"
+PA-PF-01,Performance,GET /companies,Pagination with large tenant volume (10k+ rows),Medium,"Response time within acceptable SLA, no full-table scan degradation"
+PA-PF-02,Performance,GET /dashboard,KPI aggregation under high tenant/employee volume,Medium,"Query completes within SLA; consider caching if aggregate cost grows"
+PA-PF-03,Performance,Login rate limiter,Concurrent requests from same IP,Medium,"Counter accuracy maintained under concurrency, no race condition allowing bypass"
+PA-PF-04,Performance,Provisioning,Multi-step transaction duration under concurrent provisioning load,High,"No lock contention/timeout; each transaction completes independently"
+PA-PF-05,Performance,System health,DB round-trip latency measurement accuracy under load,Low,"Reported latency reflects real conditions, not skewed by measurement overhead"
+PA-PF-06,Performance,Provisioning,Concurrent requests with identical slug,High,"Only one succeeds; other fails cleanly on unique-constraint 409, no partial data"
+PA-PF-07,Performance,Refresh rotation,Concurrent /refresh calls with the same token,High,"Only one rotation succeeds; second is correctly treated per theft-detection logic, no session corruption"
+PA-PF-08,Performance,Company search,Combined search + status filter + pagination on large dataset,Medium,"Response time within SLA, correct result set"
+PA-PM-01,Permission Testing,Tenant isolation,Regular tenant employee attempts any /api/platform-admin/* call,Critical,401 — no path succeeds regardless of tenant role
+PA-PM-02,Permission Testing,Tenant isolation,Tenant super_admin/Organization Administrator attempts platform-admin routes,Critical,401 — even the highest tenant-side role has zero access
+PA-PM-03,Permission Testing,Internal authorization model,Any authenticated platform admin calls any platform-admin endpoint,High,"Succeeds — confirm (and flag as a design decision to validate with stakeholders) that there are no internal permission tiers; all platform admins are equally privileged"
+PA-PM-04,Permission Testing,Token scope,Platform-admin token inspected for tenantId/permissions claims,High,Confirmed absent — token cannot be leveraged to bypass tenant RBAC anywhere
+PA-PM-05,Permission Testing,Module gating,Tenant user with full permissions but plan-disabled module,High,"requireFeatureEnabled still blocks with 403, permissions alone are insufficient"
+PA-PM-06,Permission Testing,Employee limit,Confirm enforcement is only on POST /users; check any bulk-import or alternate creation path,High,"Either same limit enforced elsewhere, or explicitly flag as a gap if bypassable"
+PA-PM-07,Permission Testing,Account status,Platform admin with is_active=false holding a still-valid access token from before deactivation,High,Verify whether existing token is honored (middleware doesn't re-check is_active per request) — flag as finding if still valid until natural expiry
+PA-PM-08,Permission Testing,Tenant suspension,After platform admin suspends a company - existing tenant user sessions,High,"Blocked at next request via requireActiveTenant, even with a still-valid tenant access token"

@@ -1,0 +1,1 @@
+E2E test fixture — content is irrelevant to every test that uses this file. server/routes/companyDocuments.routes.js's `fileFilter` checks only the file EXTENSION (never magic bytes/content), so this plain-text stand-in is sufficient for every upload/version/preview-415/download scenario that names a ".docx" (non-previewable) file.

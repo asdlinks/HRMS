@@ -1,0 +1,385 @@
+:root {
+  --bg: #0b1020;
+  --bg-2: #121936;
+  --panel: #182347;
+  --text: #eaf0ff;
+  --muted: #9fb0d6;
+  --accent: #4f8cff;
+  --ok: #22c55e;
+  --warn: #ef4444;
+  --queued: #f59e0b;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.app-root {
+  position: fixed;
+  inset: 0;
+}
+
+.screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---------- splash ---------- */
+.splash {
+  background: radial-gradient(1200px 800px at 50% 30%, var(--bg-2), var(--bg));
+  cursor: pointer;
+}
+.splash-inner {
+  text-align: center;
+}
+.splash-inner h1 {
+  margin: 16px 0 4px;
+  font-size: clamp(28px, 4vw, 48px);
+}
+.splash-inner p {
+  color: var(--muted);
+  font-size: clamp(16px, 2vw, 22px);
+}
+
+/* ---------- status bar / connection ---------- */
+.status-bar {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 16px 20px;
+  z-index: 30;
+}
+.conn-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(6px);
+  font-size: 14px;
+  font-weight: 600;
+}
+.conn-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+.conn-online .conn-dot {
+  background: var(--ok);
+}
+.conn-offline .conn-dot {
+  background: var(--warn);
+}
+.conn-syncing .conn-dot {
+  background: var(--accent);
+  animation: pulse 1s infinite;
+}
+.conn-badge {
+  margin-left: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--queued);
+  color: #201500;
+  font-size: 12px;
+}
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* ---------- corner hotspot (diagnostics long-press) ---------- */
+.corner-hotspot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 90px;
+  height: 90px;
+  z-index: 40;
+}
+
+/* ---------- registration ---------- */
+.registration {
+  background: radial-gradient(1200px 800px at 50% 20%, var(--bg-2), var(--bg));
+}
+.reg-card {
+  width: min(460px, 92vw);
+  background: var(--panel);
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+.reg-card h1 {
+  margin: 0 0 8px;
+  font-size: 26px;
+}
+.reg-sub {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0 0 20px;
+}
+.reg-known {
+  background: rgba(79, 140, 255, 0.12);
+  border: 1px solid rgba(79, 140, 255, 0.35);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  margin-bottom: 18px;
+}
+.reg-card label {
+  display: block;
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+.reg-card input {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #2b3a6b;
+  background: #0e1636;
+  color: var(--text);
+  font-size: 16px;
+}
+.reg-card input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.reg-error {
+  color: #ffb4b4;
+  background: rgba(239, 68, 68, 0.12);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+  margin-bottom: 14px;
+}
+.reg-card button {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 10px;
+  background: var(--accent);
+  color: white;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.reg-card button:disabled {
+  opacity: 0.6;
+}
+.reg-note {
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+  margin: 16px 0 0;
+}
+
+/* ---------- scan ---------- */
+.scan {
+  background: #000;
+}
+.scan-video,
+.scan-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* mirror so it reads like a mirror to the person standing in front */
+  transform: scaleX(-1);
+}
+.scan-canvas {
+  pointer-events: none;
+}
+.scan-hint,
+.scan-prompt {
+  position: absolute;
+  bottom: 8%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 14px 26px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.55);
+  font-size: clamp(16px, 2.2vw, 24px);
+  font-weight: 600;
+  text-align: center;
+  z-index: 10;
+}
+.scan-hint.error {
+  background: rgba(239, 68, 68, 0.7);
+}
+
+/* ---------- result overlays ---------- */
+.result-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+  animation: fadein 0.2s ease;
+}
+.result-overlay.success {
+  background: rgba(9, 40, 20, 0.82);
+}
+.result-overlay.success.tone-already {
+  background: rgba(9, 30, 55, 0.82);
+}
+.result-overlay.success.tone-queued {
+  background: rgba(60, 42, 5, 0.85);
+}
+.result-overlay.failure {
+  background: rgba(60, 12, 12, 0.85);
+}
+.result-icon {
+  width: clamp(110px, 16vw, 180px);
+  height: clamp(110px, 16vw, 180px);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(60px, 9vw, 110px);
+  font-weight: 800;
+  margin-bottom: 24px;
+  animation: pop 0.35s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+.success .result-icon {
+  background: var(--ok);
+  color: #04250f;
+}
+.success.tone-queued .result-icon {
+  background: var(--queued);
+  color: #201500;
+}
+.failure .result-icon {
+  background: var(--warn);
+  color: #2b0606;
+}
+.result-title {
+  font-size: clamp(32px, 5vw, 64px);
+  font-weight: 800;
+}
+.result-sub {
+  margin-top: 12px;
+  font-size: clamp(16px, 2.4vw, 28px);
+  color: var(--muted);
+}
+@keyframes pop {
+  from {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@keyframes fadein {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ---------- diagnostics ---------- */
+.diagnostics {
+  background: rgba(4, 8, 20, 0.92);
+  z-index: 50;
+}
+.diag-card {
+  width: min(640px, 94vw);
+  max-height: 90vh;
+  overflow: auto;
+  background: var(--panel);
+  border-radius: 18px;
+  padding: 28px;
+}
+.diag-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+.diag-head h2 {
+  margin: 0;
+}
+.diag-close,
+.diag-sync {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.diag-close {
+  background: #2b3a6b;
+  color: var(--text);
+}
+.diag-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 24px;
+}
+.diag-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 14px;
+}
+.diag-label {
+  color: var(--muted);
+}
+.diag-value {
+  font-weight: 700;
+  text-align: right;
+  word-break: break-word;
+}
+.diag-threshold {
+  margin: 20px 0;
+  font-size: 14px;
+}
+.diag-threshold input {
+  width: 100%;
+  margin-top: 10px;
+}
+.diag-sync {
+  background: var(--accent);
+  color: white;
+  width: 100%;
+}
+.diag-sync:disabled {
+  opacity: 0.5;
+}

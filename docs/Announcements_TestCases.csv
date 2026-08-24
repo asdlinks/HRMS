@@ -1,0 +1,34 @@
+Test ID,Category,Feature,Scenario,Priority,Expected Result
+AN-FN-01,Functional,Create,Create an announcement with valid title/body (announcements.manage),High,"201/200, row inserted with is_active=1, created_by=caller, returns {success:true, id}"
+AN-FN-02,Functional,List,GET /announcements as any authenticated user,High,"All is_active=1 rows for the tenant returned, ordered created_at DESC, no pagination limit"
+AN-FN-03,Functional,Delete,Soft-delete an announcement (announcements.manage),High,"is_active flipped to 0; row no longer appears in GET /announcements"
+AN-FN-04,Functional,Dashboard Widget,AnnouncementsCard renders on Employee and Manager dashboards,Medium,"Identical widget and data on both dashboards, showing the 4 most recent active announcements"
+AN-FN-05,Functional,Provisioning Grant,Verify a newly provisioned tenant's org_admin-equivalent role holds announcements.manage,Medium,"Effective grant present via tenantProvisioning.service.js even though migration 008's own seed only lists hr/super_admin"
+AN-NG-01,Negative,Create,POST /announcements without announcements.manage,High,403 forbidden
+AN-NG-02,Negative,Delete,DELETE /:id without announcements.manage,High,403 forbidden
+AN-NG-03,Negative,Delete,Delete a nonexistent id or one belonging to another tenant,High,"Confirmed gap: still returns {success:true} — rowsAffected=0 is never surfaced as a 404"
+AN-NG-04,Negative,Delete,"A manage-holder deletes an announcement authored by a DIFFERENT user",High,"Confirmed gap: succeeds — no ownership/created_by check exists; any manage-holder can retire anyone's post"
+AN-NG-05,Negative,Create,Submit a title/body consisting only of whitespace,Medium,"Confirmed gap: accepted — Zod's .min(1) counts characters, not trimmed content"
+AN-NG-06,Negative,Create,Submit a title longer than 200 characters,High,400 length validation error (matches the NVARCHAR(200) column)
+AN-NG-07,Negative,Delete,Call DELETE with a non-numeric :id,Medium,"Confirmed gap: no param validation — likely surfaces as an unhandled 500 from a raw SQL type-coercion error rather than a clean 400"
+AN-BD-01,Boundary,Create,Title at exactly 200 characters vs 201,Medium,"200 accepted, 201 rejected"
+AN-BD-02,Boundary,Dashboard Widget,Exactly 4 vs 5 active announcements existing,Medium,"With 5+, only the 4 most recent display; the 5th appears only once one of the top 4 is retired"
+AN-BD-03,Boundary,Create,Title/body containing only whitespace characters,Low,Passes validation per AN-NG-05 — duplicate boundary framing of the same gap
+AN-VD-01,Validation,announcementCreateSchema,Missing title or body,High,400 required-field error
+AN-VD-02,Validation,announcementCreateSchema,No max-length cap on body,Medium,"Confirmed gap: body is NVARCHAR(MAX) with no schema .max() — effectively unbounded"
+AN-UI-01,UI,AnnouncementsCard,Add/Delete controls visibility,High,Rendered only for announcements.manage holders; read-only list shown to everyone else
+AN-UI-02,UI,AnnouncementsCard,Submit the create form with empty fields,Medium,Blocked by native HTML5 required attributes only
+AN-UI-03,UI,AnnouncementsCard,Type a title longer than 200 characters,Medium,"Confirmed gap: no client-side max-length mirror — only discovered via the server's 400 response"
+AN-UI-04,UI,AnnouncementsCard,Rapidly double-click Delete on the same row,Low,"No per-row loading/disable state exists, but the underlying soft-delete is idempotent so no harmful double-effect occurs"
+AN-UI-05,UI,AnnouncementsCard,Compare rendering on EmployeeDashboard vs ManagerDashboard,Low,Same component, same data, same permission gating on both
+AN-AP-01,API,GET /announcements,Contract check,Medium,"No permission gate; returns active rows ordered created_at DESC, no pagination"
+AN-AP-02,API,POST /announcements,Contract check,Medium,"Returns {success:true, id}"
+AN-AP-03,API,DELETE /announcements/:id,Contract check,Medium,"Always returns {success:true} regardless of whether a row was actually affected"
+AN-DB-01,Database Validation,announcements,FK_announcements_tenant / FK_announcements_created_by integrity,Medium,Invalid tenant_id/created_by insertion rejected by FK constraints
+AN-DB-02,Database Validation,announcements,Verify no audience-targeting table/column exists,Medium,"Confirmed — every active announcement is visible tenant-wide to all authenticated users; no per-role/department scoping mechanism exists"
+AN-SC-01,Security,Ownership,Confirm no ownership check exists on delete,High,"Duplicate of AN-NG-04 from a security-boundary lens — any announcements.manage holder can retire any other author's post"
+AN-SC-02,Security,Notification Gap,Confirm creating an announcement never generates a bell notification,Medium,"Confirmed by design/omission — users only learn of new announcements by loading a dashboard; flag for stakeholder confirmation this is intentional"
+AN-SC-03,Security,Injection,SQL injection payloads in title/body fields,Critical,Parameterized queries prevent injection
+AN-PF-01,Performance,GET /announcements,Response time/size with a large number of active announcements (no server-side limit),Medium,Verify no degradation despite the unbounded result set being fetched on every dashboard load
+AN-PM-01,Permission Testing,announcements.manage,Verify required for create and delete; read remains open to all authenticated users,Critical,Confirmed split — no separate read permission exists or is checked
+AN-PM-02,Permission Testing,Seed drift,"Confirm the org_admin-equivalent role's announcements.manage grant is consistent between migration 008's seed and tenantProvisioning.service.js's seed object",Medium,"Both paths should agree post-fix; flag any divergence as a repeat of the company-documents seed-drift pattern"

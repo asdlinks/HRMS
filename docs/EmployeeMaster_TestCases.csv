@@ -1,0 +1,132 @@
+Test ID,Category,Feature,Scenario,Priority,Expected Result
+EM-FN-01,Functional,Employee Creation,Create employee with full valid payload (role/department/designation/manager/joining date/DOB),High,"201, employee record created with all fields persisted"
+EM-FN-02,Functional,Employee Creation,Verify auto role assignment on creation (Phase 7),High,"user_roles row seeded immediately using roleId or role-code match, no separate PUT /roles call needed"
+EM-FN-03,Functional,Employee Creation,"Add-mode: submit PII (Aadhaar/PAN) inline with employee creation",High,"Employee created, then PATCH /:id/pii chained automatically and saved"
+EM-FN-04,Functional,Employee Creation,"Add-mode: submit banking details inline with employee creation",High,"Employee created, then PATCH /:id/banking chained automatically and saved"
+EM-FN-05,Functional,Employee List,List employees with only users.view.directory,High,Baseline directory list returned (company-wide read)
+EM-FN-06,Functional,Employee List,List employees with users.view.team (manager),High,"List scoped recursively to the manager's reporting subtree"
+EM-FN-07,Functional,Employee List,List employees with users.view.all (HR/admin),High,"Unscoped tenant-wide list returned, takes precedence over .team"
+EM-FN-08,Functional,Employee List,Filter employee list by departmentId query param,Medium,Only matching department's employees returned
+EM-FN-09,Functional,Employee Detail,Get own profile (self, no special permission),Medium,200 with SAFE_USER_COLUMNS returned
+EM-FN-10,Functional,Employee Detail,Get another employee's detail with users.pii.manage held,High,Aadhaar/PAN fields merged into the response
+EM-FN-11,Functional,Employee Detail,Get another employee's detail with payroll.assign held,High,All 6 banking fields merged into the response
+EM-FN-12,Functional,Employee Update,General field update via PATCH /:id (department/designation/manager etc.),High,"200, fields updated; role field ignored (not in schema)"
+EM-FN-13,Functional,PII Update,Update Aadhaar/PAN via PATCH /:id/pii,High,"200, fields updated with valid format"
+EM-FN-14,Functional,Banking Update,Update banking fields via PATCH /:id/banking,High,"200, all 6 fields updated"
+EM-FN-15,Functional,Status Lifecycle,Change employee status to disabled/exited/active via PATCH /:id/status,High,"Status updated; exit_date set on 'exited', cleared otherwise"
+EM-FN-16,Functional,Password Reset,Admin resets another employee's password via PATCH /:id/reset-password,High,"200, new password bcrypt-hashed and stored"
+EM-FN-17,Functional,Account Unlock,Unlock a locked employee account via PATCH /:id/unlock,Medium,"failed_login_attempts reset to 0, locked_until cleared"
+EM-FN-18,Functional,Role Assignment,Replace an employee's roles via PUT /:id/roles with multiple roleIds,High,"user_roles fully replaced; effective permissions = union of all assigned roles"
+EM-FN-19,Functional,Reporting Line,Assign a manager to an employee (manager_id),Medium,"manager_id updated; manager dropdown correctly excludes the employee themself"
+EM-FN-20,Functional,Employee Deletion,Hard-delete an employee via DELETE /:id,High,"User row and related notifications/attendance/leaves/refresh_tokens/user_roles rows deleted; direct reports' manager_id nulled"
+EM-FN-21,Functional,Export,CSV export of the employee list,Medium,Downloaded CSV matches the currently filtered list
+EM-FN-22,Functional,Org Structure,Branches CRUD (name/code/address/city/state/country/is_active),High,CRUD succeeds with all fields persisted
+EM-FN-23,Functional,Org Structure,Designations CRUD via generic lookup router,High,CRUD succeeds
+EM-FN-24,Functional,Org Structure,Employment Types CRUD via generic lookup router,High,CRUD succeeds
+EM-FN-25,Functional,Org Structure,Departments create/delete (no edit endpoint),Medium,Create and delete succeed; no PATCH route available
+EM-FN-26,Functional,Employee Limit,Create employee under an unlimited (max_employees=null) plan,Medium,Employee-limit check skipped entirely
+EM-NG-01,Negative,Employee Creation,Create employee with an email already used in the tenant,High,"409 ""A user with this email already exists"""
+EM-NG-02,Negative,Employee Creation,"Create employee missing name/email/password/role/date_of_birth",High,400 required-field validation errors
+EM-NG-03,Negative,Employee Creation,Create employee with Aadhaar not matching 12-digit pattern,High,400 validation error
+EM-NG-04,Negative,Employee Creation,Create employee with PAN not matching the 5-letter/4-digit/1-letter pattern,High,400 validation error
+EM-NG-05,Negative,Employee Creation,Create employee when tenant is already at its subscription plan's max_employees,High,"403 ""Employee limit reached for your subscription plan (X/Y). Upgrade your plan to add more employees."""
+EM-NG-06,Negative,Employee Creation,Create employee with password shorter than 6 characters,High,"400 ""Password is required""/length validation error"
+EM-NG-07,Negative,PII,Call PATCH /:id/pii without users.pii.manage,Critical,"403; field also entirely absent (not blank) from any GET /:id response for this caller"
+EM-NG-08,Negative,Banking,Call PATCH /:id/banking without payroll.assign,Critical,403; banking fields absent from GET /:id response for this caller
+EM-NG-09,Negative,Password Reset,Call PATCH /:id/reset-password without users.password.reset,High,403 forbidden
+EM-NG-10,Negative,Unlock,Call PATCH /:id/unlock without users.unlock,High,403 forbidden
+EM-NG-11,Negative,Role Assignment,Call PUT /:id/roles without roles.manage,High,403 forbidden
+EM-NG-12,Negative,Status Lifecycle,Attempt to change own account's status,High,"400 ""You cannot change your own account status"""
+EM-NG-13,Negative,PII,Assign an Aadhaar or PAN number already used by another employee,High,"409 ""This Aadhaar or PAN number is already assigned to another employee"""
+EM-NG-14,Negative,Org Structure,Create/rename a Designation, Employment Type, Branch, or Department with a name already used in the tenant,High,"409/400 duplicate-name conflict (entity-specific message)"
+EM-NG-15,Negative,Org Structure,Delete a Designation/Employment Type/Branch/Department referenced by any employee,High,"409/400 ""...is assigned to one or more employees and cannot be deleted"""
+EM-NG-16,Negative,Org Structure,Update or delete a nonexistent Designation/Employment Type/Branch id,Medium,404 not found
+EM-NG-17,Negative,Employee Detail,GET /:id for another user without any view.* permission and not self,High,403 forbidden
+EM-NG-18,Negative,Employee List,GET /users without any of users.view.all/.team/.directory,High,403 forbidden
+EM-NG-19,Negative,Employee Update,Attempt to change role via general PATCH /:id payload,Medium,role field silently ignored — not updated (must use PUT /:id/roles)
+EM-NG-20,Negative,Org Structure,Attempt to reach removed Cost Centers / Employee Categories endpoints,Medium,404 — routes no longer mounted (migrations 041/042 removed them)
+EM-BD-01,Boundary,Probation Period,probation_period at exactly 24 months vs 25 months,Medium,"24 accepted, 25 rejected (""Must be 24 months or fewer"")"
+EM-BD-02,Boundary,Aadhaar,Aadhaar number at exactly 12 digits vs 11 or 13 digits,Medium,"12 accepted, 11/13 rejected"
+EM-BD-03,Boundary,PAN,PAN string matching pattern exactly vs one character off,Medium,"Exact-pattern accepted, near-miss rejected"
+EM-BD-04,Boundary,Password,Password at exactly 6 characters vs 5,Medium,"6 accepted, 5 rejected"
+EM-BD-05,Boundary,Employee Limit,Employee count exactly equal to max_employees vs one below,Critical,"Equal-to blocks creation (>= check), one-below allows it"
+EM-BD-06,Boundary,Date of Birth,date_of_birth as empty string vs single-character string,Low,"Empty string rejected (min1), single char passes min-length check (no further date-format validation)"
+EM-BD-07,Boundary,Org Structure names,"Designation/Employment Type name at NVARCHAR(150) limit vs one char over",Low,At-limit accepted; over-limit rejected/truncated depending on DB behavior
+EM-BD-08,Boundary,Banking fields,bank_account_number/ifsc/upi at their NVARCHAR column-length limits,Low,At-limit accepted; over-limit rejected or truncated at DB layer
+EM-VD-01,Validation,userCreateSchema,Missing email field,High,400 required-field error
+EM-VD-02,Validation,userCreateSchema,Malformed email format,High,400 email validation error
+EM-VD-03,Validation,userCreateSchema,Empty string for role,High,400 required-field error
+EM-VD-04,Validation,userPiiUpdateSchema,Aadhaar/PAN not matching their regex patterns,High,400 validation error
+EM-VD-05,Validation,userBankingUpdateSchema,Submit an obviously invalid IFSC/account number (e.g. letters in account number),Medium,"Accepted — no format/regex validation exists server-side for banking fields (confirmed gap, not a bug per se but worth flagging)"
+EM-VD-06,Validation,userStatusUpdateSchema,Invalid status value outside active/disabled/exited,High,400 enum validation error
+EM-VD-07,Validation,resetPasswordSchema,Password shorter than 6 characters,High,400 validation error
+EM-VD-08,Validation,lookupSchema,"Missing name field for Designation/Employment Type",Medium,400 required-field error
+EM-VD-09,Validation,branchSchema,Missing name field for Branch,Medium,400 required-field error
+EM-VD-10,Validation,nameOnlySchema,Missing name field for Department,Medium,400 required-field error
+EM-VD-11,Validation,userRolesAssignSchema,Missing or non-array roleIds,Medium,400 validation error
+EM-VD-12,Validation,Date fields,joining_date/exit_date accepted as any non-empty string,Low,"Accepted regardless of real date validity or logical order (confirmed gap — no date-format regex, no future/past logic checks)"
+EM-UI-01,UI,EmployeesPage,Stat cards (Total/Departments/Managers/New Joiners) accuracy,Medium,Cards reflect current filtered/unfiltered data correctly
+EM-UI-02,UI,EmployeesPage,Filter bar (search/department/branch/designation/employment type/role),High,Each filter narrows the list correctly; filters combine with AND logic
+EM-UI-03,UI,EmployeesPage,Toggle between Tree view (OrgTree) and Table view (DataGrid),Medium,Both views render consistent data
+EM-UI-04,UI,EmployeesPage,Click CSV export,Medium,Downloaded file matches the on-screen (filtered) list
+EM-UI-05,UI,EmployeeFormDialog,Submit Add/Edit with empty required fields,High,Inline validation errors block submission
+EM-UI-06,UI,EmployeeFormDialog,Add-mode Identity/Banking sections visibility,High,Rendered only for users holding users.pii.manage/payroll.assign respectively
+EM-UI-07,UI,EmployeeFormDialog,Edit-mode Identity/Banking independent Save buttons,High,Each section saves via its own endpoint independent of the main Save/Update Record button
+EM-UI-08,UI,EmployeeFormDialog,Manager dropdown filtering,Medium,"Only shown for role employee/hr; filtered to managers; excludes the employee being edited from their own candidate list"
+EM-UI-09,UI,EmployeesPage,Click Delete on an employee,High,"Confirm dialog warns record + leave/attendance history removed permanently, suggests Disable instead"
+EM-UI-10,UI,EmployeesPage,Click Status change (disable/enable/exit),Medium,Confirm dialog appears before applying the change
+EM-UI-11,UI,EmployeesPage,Click Reset Password,Medium,Dialog only visible with users.password.reset; submits new password
+EM-UI-12,UI,EmployeesPage,Click Manage Roles,Medium,Checkbox multi-role dialog only visible/loadable with roles.manage
+EM-UI-13,UI,EmployeesPage,Employee-limit usage banner,Medium,"Warning shown at >=90% of max_employees, error styling at >=100%, hidden for unlimited plans"
+EM-UI-14,UI,EmployeeProfilePage,Aadhaar/PAN visibility vs Banking absence,High,"Aadhaar/PAN shown only with users.pii.manage; banking fields never rendered on this page regardless of permission (confirmed UI asymmetry)"
+EM-UI-15,UI,OrganizationStructurePage,3-tab shell (Branches/Designations/Employment Types) permission gating,Medium,"Each tab's New/Edit actions gated independently by its own .manage permission; GET/view always available"
+EM-UI-16,UI,EmployeesPage,Partial-failure snackbar when chained PII/banking save fails after employee creation,Medium,"Employee record still created; snackbar reads ""Employee added, but failed to save X. Add it from Edit."""
+EM-AP-01,API,POST /users,Contract check on success,High,"201 with created employee id and auto-assigned role reflected in user_roles"
+EM-AP-02,API,GET /users,departmentId query param filtering,Medium,Only matching department's rows returned
+EM-AP-03,API,GET /users/:id,"Contract check across permission combinations (self, view.all, view.team, pii.manage, payroll.assign)",High,Correct field set merged per caller's held permissions
+EM-AP-04,API,PATCH /users/:id,Verify join-alias fields/children/expanded/_t/password stripped from payload before persisting,Medium,Extraneous fields ignored without error
+EM-AP-05,API,DELETE /users/:id,Contract check on cascade behavior,High,"All documented child rows removed transactionally; response 200/204"
+EM-AP-06,API,PATCH /users/:id/status,Contract check incl. exit_date handling,Medium,exit_date set only for 'exited' status; nulled otherwise
+EM-AP-07,API,PATCH /users/:id/unlock,Contract check,Medium,failed_login_attempts and locked_until reset correctly
+EM-AP-08,API,PATCH /users/:id/reset-password,Contract check,High,New password hash persisted; old password invalidated
+EM-AP-09,API,PATCH /users/:id/pii,Contract check,High,Only Aadhaar/PAN fields affected
+EM-AP-10,API,PATCH /users/:id/banking,Contract check,High,Only the 6 banking fields affected
+EM-AP-11,API,PUT /users/:id/roles,Full-replace contract check,High,Prior user_roles rows removed; new set inserted atomically
+EM-AP-12,API,Designations/Employment Types lookup router,Full GET/POST/PATCH/DELETE contract,High,Matches generic lookupSchema and referenced-delete-protection behavior
+EM-AP-13,API,Branches (locations),Full CRUD contract,High,Matches branchSchema field set
+EM-AP-14,API,Departments,Create/Delete contract; verify no PATCH route exists,Medium,POST/DELETE work; PATCH returns 404/405
+EM-DB-01,Database Validation,users.status,Insert/update to a value outside active/disabled/exited,High,CK_users_status CHECK constraint violation
+EM-DB-02,Database Validation,users.aadhaar_number,Insert a duplicate non-null Aadhaar value,High,"UQ_users_aadhaar_number filtered unique index violation; verify constraint is NOT tenant-scoped (cross-tenant collision test)"
+EM-DB-03,Database Validation,users.pan_number,Insert a duplicate non-null PAN value,High,"UQ_users_pan_number filtered unique index violation; same cross-tenant scope caveat as Aadhaar"
+EM-DB-04,Database Validation,Org structure tables,Insert duplicate (tenant_id, name) into designations/employment_types/locations/departments,High,UNIQUE(tenant_id, name) violation
+EM-DB-05,Database Validation,users FK columns,Insert invalid designation_id/employment_type_id/location_id/manager_id/department_id,Medium,FK constraint violation
+EM-DB-06,Database Validation,Hard delete cascade,Delete a user with existing notifications/attendance/leaves/refresh_tokens/user_roles rows,Critical,All related rows removed in the same transaction; direct reports' manager_id set to NULL
+EM-DB-07,Database Validation,Dead org-structure tables,Verify cost_centers/employee_categories tables receive no new data via any reachable path,Medium,"Tables remain static/orphaned — confirms no leftover write path exists"
+EM-DB-08,Database Validation,employee_salary_assignments banking columns,Confirm the 4 old banking columns were dropped by migration 043 and no code references them,Medium,Columns absent; no runtime errors referencing dropped columns
+EM-DB-09,Database Validation,Plaintext storage,Inspect users.aadhaar_number/pan_number/bank_* columns,Critical,Stored as plain NVARCHAR with no encryption — confirmed security finding
+EM-SC-01,Security,PII/Banking exposure,Verify Aadhaar/PAN/full bank account number are returned unmasked to any caller holding the gating permission,Critical,"No masking (e.g. no partial ""****1234"" display) anywhere in API or UI — flag as a finding"
+EM-SC-02,Security,Cross-tenant PII collision,Attempt to create/update an Aadhaar or PAN value already used by an employee in a DIFFERENT tenant,High,"Blocked by the global (non-tenant-scoped) unique index — verify this cross-tenant blocking behavior is understood/accepted, since it could allow one tenant's create attempt to fail because of another tenant's data"
+EM-SC-03,Security,Password reset scoping,"Call authRepo.updateUserPassword-backed reset endpoint with a crafted/foreign userId, relying only on route-layer tenant scoping",Critical,Route-layer checks must prevent cross-tenant password reset since the repo call itself is not tenant-scoped
+EM-SC-04,Security,Injection,SQL injection payloads in employee name/search/org-structure name fields,Critical,Parameterized queries prevent injection
+EM-SC-05,Security,XSS,"<script> payload in employee name, designation, or notes-like text fields",High,Sanitized/escaped on render in Employee Directory and Profile pages
+EM-SC-06,Security,Privilege separation,"Caller with only users.manage attempts /pii, /banking, /reset-password, /unlock, /roles",Critical,All five blocked with 403 despite general edit rights — confirms deliberate permission segregation
+EM-SC-07,Security,Field-level leakage,"Compare GET /:id response for a caller without pii/banking permission vs with it",High,Fields are entirely absent from the JSON (not null/blank) when the caller lacks permission — no leakage via presence
+EM-SC-08,Security,Self-lockout,Attempt to bypass the self-status-change block via a different endpoint or bulk action,High,No alternate path allows a user to disable/exit their own account
+EM-SC-09,Security,Password hashing,Verify bcrypt cost factor on admin-reset passwords,Medium,Cost factor 10 confirmed
+EM-PF-01,Performance,GET /users,Large employee count with users.view.all scope,Medium,Response time within SLA; no full-table scan degradation
+EM-PF-02,Performance,GET /users,users.view.team recursive manager-hierarchy walk on a deep org chart,Medium,Recursive resolution completes within SLA even for many management levels
+EM-PF-03,Performance,CSV Export,Large employee list export,Low,Export completes within SLA without blocking the UI
+EM-PF-04,Performance,DELETE /users/:id,Hard delete of a user with extensive attendance/leave history,High,Cascading transaction completes within SLA without lock contention
+EM-PF-05,Performance,Org structure GET,Designations/Employment Types/Branches list under frequent unguarded calls,Low,No measurable degradation from being open to all authenticated users
+EM-PM-01,Permission Testing,View scoping,Verify users.view.directory / .team / .all precedence and correct scoping,Critical,".all overrides .team overrides .directory; each returns the documented scope exactly"
+EM-PM-02,Permission Testing,users.manage,Verify required for POST/PATCH/DELETE/status endpoints,Critical,All blocked without this permission
+EM-PM-03,Permission Testing,users.password.reset,Verify independent from users.manage,High,A role with users.manage alone cannot reset passwords
+EM-PM-04,Permission Testing,users.unlock,Verify independent from users.manage and users.password.reset,High,A role with either of those alone cannot unlock accounts
+EM-PM-05,Permission Testing,users.pii.manage,Verify independent gate for Aadhaar/PAN read and write,Critical,Not implied by users.manage or users.view.all
+EM-PM-06,Permission Testing,payroll.assign for banking,Verify this payroll permission (not a dedicated employees.banking.manage) gates banking read/write,High,Confirmed reused permission — flag as intentional design to validate with stakeholders
+EM-PM-07,Permission Testing,roles.manage,Verify required for PUT /:id/roles and all role CRUD/permission-editing,Critical,Blocked without this permission
+EM-PM-08,Permission Testing,locations.manage vs locations.view,Verify view is open to all roles (029 backfill) while mutation requires .manage,Medium,GET succeeds for any authenticated user; POST/PATCH/DELETE require locations.manage
+EM-PM-09,Permission Testing,designations.manage / employment-types.manage,Verify GET is open to all while mutation requires the specific .manage permission,Medium,Confirmed per-entity split between read and write access
+EM-PM-10,Permission Testing,departments.manage,Verify required for create/delete,Medium,Blocked without this permission
+EM-PM-11,Permission Testing,Removed permissions,Confirm cost-centers.manage and employee-categories.manage are no longer grantable via role management UI/API,Medium,Neither permission exists in the seed/permissions list post migrations 041/042
+EM-PM-12,Permission Testing,Least-privilege directory view,Role with only users.view.directory attempts to read PII/banking fields via any response,High,Fields never present regardless of another caller's data in the same list/detail response

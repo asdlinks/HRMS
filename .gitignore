@@ -1,0 +1,20 @@
+node_modules
+.env
+tmp
+leave_management.db
+
+# Playwright / local run artifacts
+playwright-report/
+.e2e/
+e2e/.auth/
+e2e/test-results/
+e2e/blob-report/
+e2e/report/
+**/e2e-run-*.log
+*.log
+
+# Local workspace leftovers
+.DS_Store
+
+
+
