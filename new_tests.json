@@ -1,14 +1,8 @@
 [
   {
-    "id": "company-documents-view",
-    "title": "Access company documents",
-    "description": "Company policy documents are a distinct read/access feature in scope.",
-    "file": "tests/company-documents-view.spec.ts"
-  },
-  {
-    "id": "leave-application-full-day",
-    "title": "Submit a valid full-day leave request",
-    "description": "Submitting leave is a core employee workflow that crosses the leave form and request-status list.",
-    "file": "tests/leave-application-full-day.spec.ts"
+    "id": "dashboard-overview",
+    "title": "Review dashboard overview",
+    "description": "The dashboard is the primary authenticated landing area and must provide a usable overview.",
+    "file": "tests/dashboard-overview.spec.ts"
   }
 ]
