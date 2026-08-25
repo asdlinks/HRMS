@@ -1,8 +1,8 @@
 [
   {
-    "id": "dashboard-overview",
-    "title": "Review dashboard overview",
-    "description": "The dashboard is the primary authenticated landing area and must provide a usable overview.",
-    "file": "tests/dashboard-overview.spec.ts"
+    "id": "leave-status-views-cancel",
+    "title": "Review leave status views and cancel a request",
+    "description": "Status transitions and cancellation span Leaves and Leave Cancellation and are a critical cross-module journey.",
+    "file": "tests/leave-status-views-cancel.spec.ts"
   }
 ]
