@@ -1,8 +1,8 @@
 [
   {
-    "id": "leave-status-views-cancel",
-    "title": "Review leave status views and cancel a request",
-    "description": "Status transitions and cancellation span Leaves and Leave Cancellation and are a critical cross-module journey.",
-    "file": "tests/leave-status-views-cancel.spec.ts"
+    "id": "attendance-search-controls-export",
+    "title": "Search, filter, customize, and export attendance",
+    "description": "Attendance is a high-risk operational record and its search, filtering, presentation, and export actions need coverage, including no-match behavior.",
+    "file": "tests/attendance-search-controls-export.spec.ts"
   }
 ]
